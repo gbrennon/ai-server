@@ -1,0 +1,77 @@
+---
+- name: Install backend-specific packages
+  ansible.builtin.dnf:
+    name: "{{ vulkan_packages }}"
+    state: present
+  when: llamacpp_backend == 'vulkan'
+
+- name: Warn if CUDA backend selected
+  ansible.builtin.debug:
+    msg: >-
+      CUDA backend selected: make sure the NVIDIA driver and the CUDA toolkit
+      (nvcc) are already installed on this machine — the playbook will build
+      with -DGGML_CUDA=ON.
+  when: llamacpp_backend == 'cuda'
+
+- name: Check out llama.cpp source
+  ansible.builtin.git:
+    repo: "{{ llamacpp_repo }}"
+    dest: "{{ llamacpp_install_dir }}"
+    version: "{{ llamacpp_version }}"
+    depth: 1
+    force: true
+
+- name: Fix source tree ownership for service user
+  ansible.builtin.file:
+    path: "{{ llamacpp_install_dir }}"
+    state: directory
+    owner: "{{ llamacpp_user }}"
+    group: "{{ llamacpp_group }}"
+    recurse: true
+
+- name: Register current build config
+  ansible.builtin.slurp:
+    src: "{{ llamacpp_install_dir }}/build/.build-config"
+  register: current_build_config
+  failed_when: false
+
+- name: Compute desired build config
+  ansible.builtin.set_fact:
+    desired_build_config: "{{ llamacpp_version }}:{{ llamacpp_backend }}"
+
+- name: Set rebuild flag when config changed
+  ansible.builtin.set_fact:
+    rebuild_required: >-
+      {{ current_build_config is failed or
+         (current_build_config.content | b64decode | trim) != desired_build_config }}
+
+- name: Configure llama.cpp (CMake)
+  ansible.builtin.command: >-
+    cmake -B build
+    -DGGML_NATIVE=ON
+    -DLLAMA_BUILD_SERVER=ON
+    -DGGML_VULKAN={{ 'ON' if llamacpp_backend == 'vulkan' else 'OFF' }}
+    -DGGML_CUDA={{ 'ON' if llamacpp_backend == 'cuda' else 'OFF' }}
+    -DCMAKE_BUILD_TYPE=Release
+  args:
+    chdir: "{{ llamacpp_install_dir }}"
+  when: rebuild_required | bool
+  changed_when: true
+
+- name: Compile llama.cpp
+  community.general.make:
+    chdir: "{{ llamacpp_install_dir }}/build"
+    jobs: "{{ llamacpp_build_jobs }}"
+    target: llama-server
+  when: rebuild_required | bool
+
+- name: Stamp build configuration
+  ansible.builtin.copy:
+    content: "{{ desired_build_config }}\n"
+    dest: "{{ llamacpp_install_dir }}/build/.build-config"
+    mode: "0644"
+
+- name: Ensure server binary is executable
+  ansible.builtin.file:
+    path: "{{ llamacpp_install_dir }}/build/bin/llama-server"
+    mode: "0755"

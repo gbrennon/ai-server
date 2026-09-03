@@ -1,0 +1,41 @@
+---
+- name: Check existing swap file
+  ansible.builtin.stat:
+    path: "{{ swapfile_path | default('/swapfile') }}"
+  register: swapfile_stat
+
+- name: Check active swap
+  ansible.builtin.command: swapon --show=NAME
+  register: active_swap
+  changed_when: false
+
+- name: Create dedicated swap file
+  ansible.builtin.command: >-
+    fallocate -l {{ swap_file_size_mb }}M {{ swapfile_path | default('/swapfile') }}
+  when: not swapfile_stat.stat.exists
+
+- name: Set swap file permissions
+  ansible.builtin.file:
+    path: "{{ swapfile_path | default('/swapfile') }}"
+    mode: "0600"
+
+- name: Format swap file
+  ansible.builtin.command: mkswap {{ swapfile_path | default('/swapfile') }}
+  when: not swapfile_stat.stat.exists
+  changed_when: true
+
+- name: Activate swap
+  ansible.builtin.command: swapon {{ swapfile_path | default('/swapfile') }}
+  when:
+    - not swapfile_stat.stat.exists
+    - (swapfile_path | default('/swapfile')) not in active_swap.stdout
+  failed_when: false
+  changed_when: true
+
+- name: Persist swap in fstab
+  ansible.posix.mount:
+    name: none
+    src: "{{ swapfile_path | default('/swapfile') }}"
+    fstype: swap
+    opts: sw
+    state: present

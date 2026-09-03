@@ -1,0 +1,52 @@
+---
+# ============================================================================
+# llama.cpp server configuration — tune everything here.
+# Works on Fedora Server and Rocky Linux (any dnf-based distro).
+# ============================================================================
+
+# --- Service user / paths ---
+llamacpp_user: llamacpp
+llamacpp_group: llamacpp
+llamacpp_install_dir: /opt/llama.cpp
+llamacpp_models_dir: /var/lib/llama.cpp/models
+llamacpp_logs_dir: /var/log/llama.cpp
+
+# --- llama.cpp source ---
+# Pin to a release tag, or use 'master' to track HEAD.
+llamacpp_repo: https://github.com/ggml-org/llama.cpp.git
+llamacpp_version: b5446
+
+# --- Hardware backend ---
+# backend: "cpu" | "vulkan" | "cuda"
+# - cpu:    works everywhere, uses GGML_NATIVE for optimal SIMD codegen
+# - vulkan: good for AMD/Intel GPUs (and NVIDIA without CUDA toolbox bloat)
+# - cuda:   NVIDIA GPUs — requires the CUDA toolkit on the target machine
+llamacpp_backend: cpu
+
+# Build parallelism (defaults to number of CPU cores)
+llamacpp_build_jobs: "{{ ansible_processor_vcpus }}"
+
+# --- Server runtime settings ---
+llamacpp_host: 0.0.0.0
+llamacpp_port: 8080
+llamacpp_ctx_size: 8192
+llamacpp_threads: "{{ ansible_processor_vcpus }}"
+llamacpp_extra_args: ""
+# Example extra args:
+# llamacpp_extra_args: "-ngl 99 --flash-attn --mlock"
+
+# --- Model ---
+# Any direct-download GGUF URL (Hugging Face "resolve" links work out of
+# the box). Pick one that fits your hardware!
+llamacpp_model_url: >-
+  https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/
+  Llama-3.2-3B-Instruct-Q4_K_M.gguf
+llamacpp_model_file: Llama-3.2-3B-Instruct-Q4_K_M.gguf
+
+# --- Firewall ---
+llamacpp_open_firewall: true
+llamacpp_firewall_zone: public
+
+# --- Optional: swap size (useful on small-RAM boxes) ---
+manage_swap: false
+swap_file_size_mb: 4096

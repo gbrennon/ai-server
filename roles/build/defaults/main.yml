@@ -1,0 +1,6 @@
+---
+# Vulkan development packages (Fedora + Rocky both ship these)
+vulkan_packages:
+  - vulkan-loader-devel
+  - vulkan-headers
+  - glslc

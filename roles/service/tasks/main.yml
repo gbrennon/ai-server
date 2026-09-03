@@ -1,0 +1,41 @@
+---
+- name: Open firewall port for llama-server
+  ansible.posix.firewalld:
+    port: "{{ llamacpp_port }}/tcp"
+    permanent: true
+    immediate: true
+    state: enabled
+    zone: "{{ llamacpp_firewall_zone }}"
+  when: llamacpp_open_firewall | bool
+
+- name: Install systemd unit for llama-server
+  ansible.builtin.template:
+    src: llama-server.service.j2
+    dest: /etc/systemd/system/llama-server.service
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart llama-server
+
+- name: Enable and start llama-server
+  ansible.builtin.systemd:
+    name: llama-server
+    state: started
+    enabled: true
+
+- name: Wait for server health endpoint
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ llamacpp_port }}/health"
+    status_code: 200
+    timeout: 5
+  register: health
+  retries: 30
+  delay: 5
+  until: health.status == 200
+
+- name: Deployment successful
+  ansible.builtin.debug:
+    msg: >-
+      llama-server is UP and healthy on port {{ llamacpp_port }}.
+      API: http://{{ ansible_host | default('localhost') }}:{{ llamacpp_port }}/v1/chat/completions
+      Web UI: http://{{ ansible_host | default('localhost') }}:{{ llamacpp_port }}/

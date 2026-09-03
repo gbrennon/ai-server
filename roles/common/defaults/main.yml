@@ -1,0 +1,12 @@
+---
+common_packages:
+  - git
+  - curl
+  - wget
+  - cmake
+  - make
+  - gcc-c++
+  - clang
+  - python3
+  - firewalld
+  - policycoreutils-python-utils

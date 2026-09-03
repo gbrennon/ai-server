@@ -1,0 +1,40 @@
+---
+- name: Install base build & runtime packages
+  ansible.builtin.dnf:
+    name: "{{ common_packages }}"
+    state: present
+
+- name: Ensure firewalld is running and enabled
+  ansible.builtin.systemd:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: Create llama.cpp service group
+  ansible.builtin.group:
+    name: "{{ llamacpp_group }}"
+    system: true
+
+- name: Create llama.cpp service user
+  ansible.builtin.user:
+    name: "{{ llamacpp_user }}"
+    group: "{{ llamacpp_group }}"
+    system: true
+    shell: /sbin/nologin
+    home: "{{ llamacpp_models_dir }}"
+    create_home: false
+
+- name: Create required directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ llamacpp_user }}"
+    group: "{{ llamacpp_group }}"
+    mode: "0755"
+  loop:
+    - "{{ llamacpp_models_dir }}"
+    - "{{ llamacpp_logs_dir }}"
+
+- name: Manage swap file
+  ansible.builtin.include_tasks: swap.yml
+  when: manage_swap | bool
