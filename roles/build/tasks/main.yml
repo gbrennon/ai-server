@@ -13,6 +13,11 @@
       with -DGGML_CUDA=ON.
   when: llamacpp_backend == 'cuda'
 
+- name: Trust install dir for git operations (root vs service-user ownership)
+  ansible.builtin.command: git config --global --add safe.directory {{ llamacpp_install_dir }}
+  changed_when: false
+  failed_when: false
+
 - name: Check out llama.cpp source
   ansible.builtin.git:
     repo: "{{ llamacpp_repo }}"
