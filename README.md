@@ -1,5 +1,7 @@
 # ai-server — llama.cpp automation for Fedora Server / Rocky Linux
 
+**GMKtec Evo X2 owner?** See [docs/gmktec-evo-x2.md](docs/gmktec-evo-x2.md) and `scripts/deploy-remote.sh` for one-command remote deployment with GPU (Vulkan) offload.
+
 Complete, idempotent automation to **build, deploy, and run llama.cpp**
 (`llama-server`, OpenAI-compatible API) on any `dnf`-based distro:
 Fedora Server, Rocky Linux 8/9/10, AlmaLinux, RHEL.

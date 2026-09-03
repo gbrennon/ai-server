@@ -7,6 +7,11 @@ OS install is automated by this repo.
 
 ## 0. Before delivery day (do it now)
 
+> **Deploying to the GMKtec Evo X2?** Follow
+> [docs/gmktec-evo-x2.md](docs/gmktec-evo-x2.md) and use
+> `scripts/deploy-remote.sh` — it applies the full GPU (Vulkan) profile
+> automatically.
+
 - [ ] Pick the model the hardware can handle and set it in
       **`group_vars/all.yml`** (`llamacpp_model_url` / `llamacpp_model_file`).
       Rule of thumb for Q4_K_M GGUF: ~0.6 GB per billion parameters, plus
