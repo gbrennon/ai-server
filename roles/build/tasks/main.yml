@@ -42,8 +42,7 @@
 - name: Set rebuild flag when config changed
   ansible.builtin.set_fact:
     rebuild_required: >-
-      {{ current_build_config is failed or
-         (current_build_config.content | b64decode | trim) != desired_build_config }}
+      {{ (current_build_config.content | default('') | b64decode | trim) != desired_build_config }}
 
 - name: Configure llama.cpp (CMake)
   ansible.builtin.command: >-
