@@ -32,7 +32,11 @@ dnf install -y ansible || {
   echo "Falling back to pip..."
   dnf install -y python3-pip
   python3 -m pip install --upgrade ansible
+  export PATH=/usr/local/bin:$PATH
 }
+
+# make sure ansible tools are on PATH regardless of install method
+export PATH=/usr/local/bin:$PATH
 
 echo "==> [2/3] Installing required Ansible collections"
 ansible-galaxy collection install -r "${REPO_DIR}/requirements.yml" --force
