@@ -4,6 +4,10 @@ Complete, idempotent automation to **build, deploy, and run llama.cpp**
 (`llama-server`, OpenAI-compatible API) on any `dnf`-based distro:
 Fedora Server, Rocky Linux 8/9/10, AlmaLinux, RHEL.
 
+## Delivery-day runbook
+
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** — step-by-step instructions for deploying to a fresh mini PC (OS install, one-command setup, verification, troubleshooting).
+
 ## Quick start (one command)
 
 Clone this repo on the target machine and run:
