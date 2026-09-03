@@ -91,7 +91,6 @@ qemu-system-x86_64 \
   -m "${VM_RAM_MB}" -smp "${VM_CPUS}" \
   -drive file=disk.qcow2,if=virtio,format=qcow2 \
   -drive file=seed.img,if=virtio,format=raw,media=disk \
-  -virtfs local,path="$(dirname "${MODEL_SRC}")",mount_tag=hostmodel,security_model=none,readonly=on \
   -netdev user,id=n0,hostfwd=tcp::${SSH_PORT}-:22,hostfwd=tcp::${HTTP_PORT}-:8080 \
   -device virtio-net-pci,netdev=n0 \
   -display none -serial file:serial.log \
@@ -117,14 +116,15 @@ log "copying automation repo into VM"
 tar --exclude=.git -czf /tmp/ai-server.tgz -C "${REPO_DIR}" .
 scp -P ${SSH_PORT} -i "${SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
   /tmp/ai-server.tgz "${SSH_USER}@127.0.0.1:/tmp/" >/dev/null
-ssh_cmd 'mkdir -p ~/ai-server && tar -xzf /tmp/ai-server.tgz -C ~/ai-server'
+ssh_cmd 'mkdir -p ~/ai-server && tar -xzf /tmp/ai-server.tgz -C ~/ai-server \
+  && sed -i "s|^llamacpp_model_file:.*|llamacpp_model_file: $(basename '"'"'"${MODEL_SRC}"'"'"')|" ~/ai-server/group_vars/all.yml' 
 
-# ---- 6. stage the model inside the VM (from the 9p share) --------------------
-log "staging model into VM via virtio-9p"
-ssh_cmd 'sudo mkdir -p /mnt/hostmodel \
-  && sudo mount -t 9p -o trans=virtio,version=9p2000.L,ro hostmodel /mnt/hostmodel \
-  && sudo mkdir -p /var/lib/llama.cpp/models \
-  && sudo cp /mnt/hostmodel/$(basename '"'"'"${MODEL_SRC}"'"'"') /var/lib/llama.cpp/models/'
+# ---- 6. copy the model into the VM (9p is unavailable on Rocky cloud kernels) ----
+log "copying model into VM (this may take a few minutes)"
+ssh_cmd 'sudo mkdir -p /var/lib/llama.cpp/models && sudo chown ai: /var/lib/llama.cpp/models'
+scp -P ${SSH_PORT} -i "${SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+  "${MODEL_SRC}" "${SSH_USER}@127.0.0.1:/var/lib/llama.cpp/models/" >/dev/null
+ssh_cmd 'sudo chown -R llamacpp:llamacpp /var/lib/llama.cpp/models && sudo ls -lh /var/lib/llama.cpp/models/'
 
 # ---- 7. run the actual automation --------------------------------------------
 log "running bootstrap.sh INSIDE the VM (this builds llama.cpp — be patient)"
