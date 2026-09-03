@@ -94,7 +94,7 @@ qemu-system-x86_64 \
   -virtfs local,path="$(dirname "${MODEL_SRC}")",mount_tag=hostmodel,security_model=none,readonly=on \
   -netdev user,id=n0,hostfwd=tcp::${SSH_PORT}-:22,hostfwd=tcp::${HTTP_PORT}-:8080 \
   -device virtio-net-pci,netdev=n0 \
-  -nographic -serial file:serial.log \
+  -display none -serial file:serial.log \
   -daemonize -pidfile vm.pid
 trap 'kill "$(cat vm.pid 2>/dev/null)" 2>/dev/null || true' EXIT
 
