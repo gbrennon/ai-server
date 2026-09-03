@@ -124,7 +124,7 @@ log "copying model into VM (this may take a few minutes)"
 ssh_cmd 'sudo mkdir -p /var/lib/llama.cpp/models && sudo chown ai: /var/lib/llama.cpp/models'
 scp -P ${SSH_PORT} -i "${SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
   "${MODEL_SRC}" "${SSH_USER}@127.0.0.1:/var/lib/llama.cpp/models/" >/dev/null
-ssh_cmd 'sudo chown -R llamacpp:llamacpp /var/lib/llama.cpp/models && sudo ls -lh /var/lib/llama.cpp/models/'
+ssh_cmd 'ls -lh /var/lib/llama.cpp/models/'
 
 # ---- 7. run the actual automation --------------------------------------------
 log "running bootstrap.sh INSIDE the VM (this builds llama.cpp — be patient)"
