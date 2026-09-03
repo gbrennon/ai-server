@@ -116,8 +116,11 @@ log "copying automation repo into VM"
 tar --exclude=.git -czf /tmp/ai-server.tgz -C "${REPO_DIR}" .
 scp -P ${SSH_PORT} -i "${SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
   /tmp/ai-server.tgz "${SSH_USER}@127.0.0.1:/tmp/" >/dev/null
-ssh_cmd 'mkdir -p ~/ai-server && tar -xzf /tmp/ai-server.tgz -C ~/ai-server \
-  && sed -i "s|^llamacpp_model_file:.*|llamacpp_model_file: $(basename '"'"'"${MODEL_SRC}"'"'"')|" ~/ai-server/group_vars/all.yml' 
+MODEL_NAME=$(basename "${MODEL_SRC}")
+ssh_cmd "mkdir -p ~/ai-server && tar -xzf /tmp/ai-server.tgz -C ~/ai-server \
+  && sed -i 's|^llamacpp_model_file:.*|llamacpp_model_file: ${MODEL_NAME}|' ~/ai-server/group_vars/all.yml \
+  && grep llamacpp_model_file ~/ai-server/group_vars/all.yml"
+
 
 # ---- 6. copy the model into the VM (9p is unavailable on Rocky cloud kernels) ----
 log "copying model into VM (this may take a few minutes)"
