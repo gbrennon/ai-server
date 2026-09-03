@@ -23,10 +23,9 @@ The script:
 3. Boots the VM with KVM — **12 GB RAM / 8 vCPUs** — and forwards:
    - host `2222` → VM `22` (SSH)
    - host `8080` → VM `8080` (llama-server)
-4. Shares your local Hugging Face model
-   (`~/.cache/huggingface/.../Qwen3-8B-Q4_K_M.gguf`) into the VM via
-   **virtio-9p** — no multi-GB copy, and it doubles as a test that the
-   playbook's model path works,
+4. Copies your local Hugging Face model
+   (`~/.cache/huggingface/.../Qwen3-8B-Q4_K_M.gguf`) into the VM via scp and
+   rewrites `group_vars/all.yml` so the playbook serves **Qwen3-8B**,
 5. Copies this repo into the VM and runs `sudo ./bootstrap.sh` inside it
    (installs packages, builds llama.cpp, configures firewalld, starts the
    systemd service),
@@ -51,6 +50,7 @@ The script:
 |---|---|
 | Image download (first run) | 2–5 min |
 | VM boot + cloud-init | 2–4 min |
+| Model copy into VM (scp) | 1–3 min |
 | dnf packages + llama.cpp build | 5–15 min |
 | Health check + chat test | < 1 min |
 | **Total (first run)** | **~10–25 min** |
@@ -137,20 +137,15 @@ scp -P 2222 /tmp/ai-server.tgz ai@127.0.0.1:/tmp/
 # inside the VM:
 mkdir -p ~/ai-server && tar -xzf /tmp/ai-server.tgz -C ~/ai-server
 
-# stage the model from the 9p share:
-sudo mkdir -p /mnt/hostmodel /var/lib/llama.cpp/models
-sudo mount -t 9p -o trans=virtio,version=9p2000.L,ro hostmodel /mnt/hostmodel
-sudo cp /mnt/hostmodel/Qwen3-8B-Q4_K_M.gguf /var/lib/llama.cpp/models/
-```
+# stage the model (from the host): note Rocky cloud kernels have no 9p
+# support, so copy the file over the SSH port-forward instead:
+scp -P 2222 ~/.cache/huggingface/hub/models--unsloth--Qwen3-8B-GGUF/snapshots/a6adef130ffb23ddaf1a62fec9dced968c9bc482/Qwen3-8B-Q4_K_M.gguf \
+  ai@127.0.0.1:/var/lib/llama.cpp/models/   # dir must be chown'ed to ai first
 
-> The playbook downloads the model listed in `group_vars/all.yml` only if
-> it's missing. Since we staged Qwen3-8B manually, point the vars at it first
-> (edit `group_vars/all.yml` inside the VM):
->
->     llamacpp_model_file: Qwen3-8B-Q4_K_M.gguf
->
-> (Alternatively, let the playbook download the model itself from Hugging
-> Face — that is a valid end-to-end test too, just slower.)
+# and point the playbook at it (inside the VM):
+sed -i 's|^llamacpp_model_file:.*|llamacpp_model_file: Qwen3-8B-Q4_K_M.gguf|' \
+  ~/ai-server/group_vars/all.yml
+```
 
 Then **the actual test** — run the full automation:
 
@@ -193,6 +188,22 @@ The web UI is available at **http://localhost:8080/** from the host browser.
 - [ ] `POST /v1/chat/completions` returns a coherent answer
 - [ ] Port `8080/tcp` open in firewalld
 - [ ] Re-running `bootstrap.sh` is a no-op (idempotency: nothing `changed` on second run except the health check)
+
+## Verified result (2026-09-03, Rocky Linux 9 VM, Qwen3-8B-Q4_K_M)
+
+- Playbook recap: `ok=17 changed=10 failed=0`
+- `GET /health` → `{"status":"ok"}`
+- `POST /v1/chat/completions` → real completion from Qwen3-8B
+  (~10.9 tok/s on 8 vCPUs, CPU backend)
+
+Bugs found & fixed by this verification:
+
+1. `-nographic` conflicts with `-daemonize` in QEMU → `-display none`
+2. pip-installed ansible not on root's `PATH` in `bootstrap.sh`
+3. undefined-variable crash in `roles/build` when the build stamp is missing
+4. git "dubious ownership" on the `llamacpp`-owned source tree → added
+   `safe.directory` config in the build role
+5. missing `libcurl-devel` (llama.cpp server needs CURL)
 
 ## Cleanup
 
