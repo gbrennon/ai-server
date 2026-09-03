@@ -6,6 +6,7 @@ common_packages:
   - cmake
   - make
   - gcc-c++
+  - libcurl-devel
   - clang
   - python3
   - firewalld
