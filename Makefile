@@ -12,8 +12,10 @@ deploy:
 # Re-run only specific stages
 build-only:
 	ansible-playbook site.yml --tags build --connection=local
+
 models-only:
 	ansible-playbook site.yml --tags models --connection=local
+
 service-only:
 	ansible-playbook site.yml --tags service --connection=local
 
