@@ -8,7 +8,7 @@ OS install is automated by this repo.
 ## 0. Before delivery day (do it now)
 
 > **Deploying to the GMKtec Evo X2?** Follow
-> [docs/gmktec-evo-x2.md](docs/gmktec-evo-x2.md) and use
+> [docs/gmktec-evo-x2.md](gmktec-evo-x2.md) and use
 > `scripts/deploy-remote.sh` — it applies the full GPU (Vulkan) profile
 > automatically.
 
@@ -95,6 +95,44 @@ systemctl restart llama-server
 sudo ./bootstrap.sh                    # apply config changes
 ```
 
+### Stop, disable, or remove the service
+
+Take the server down without uninstalling (keeps the box responsive while
+it stays installed):
+
+```bash
+systemctl stop llama-server        # stop now
+systemctl disable llama-server     # do not start it at boot
+systemctl restart llama-server     # bring it back later
+systemctl status llama-server      # active=inactive enabled=disabled
+```
+
+To fully uninstall the service, model, install dir, and service user:
+
+```bash
+sudo systemctl disable --now llama-server
+sudo rm /etc/systemd/system/llama-server.service
+sudo systemctl daemon-reload
+sudo rm -rf /opt/llama.cpp /var/lib/llama.cpp /var/log/llama.cpp
+sudo userdel llamacpp
+```
+
+### Avoid a CPU/memory freeze
+
+A large model on a CPU-only box pegs every core plus gigabytes of RAM and
+can freeze the machine for minutes. Observed in practice: Qwen3-8B on a
+16-thread CPU dev box drove load above 60 with an unresponsive GUI before
+recovering after the process was killed. To prevent issues:
+
+- Follow the repo's split: **verify in QEMU** (`qemu-verify.sh`); **deploy**
+  to the real hardware. Do not run a big model as a foreground step on a
+  machine you need to keep responsive.
+- If you must run locally, cap threads (`llamacpp_threads: 4`) and use a
+  small model before a larger one.
+- Recover from a freeze by killing the process directly:
+  `pkill -9 llama-server` or `sudo systemctl stop llama-server`.
+- Keep a box from churning at boot: `sudo systemctl disable llama-server`.
+
 ## 6. Troubleshooting
 
 | Symptom | Check |
@@ -102,4 +140,4 @@ sudo ./bootstrap.sh                    # apply config changes
 | service won't start | `journalctl -u llama-server -e` (often out-of-memory → smaller model or `manage_swap: true`) |
 | unreachable from LAN | `sudo firewall-cmd --list-ports` shows `8080/tcp`? |
 | re-run fails at git | pull latest repo; the playbook handles `safe.directory` itself |
-| wants GPU offload | confirm `llamacpp_backend` and `-ngl 99`; see `docs/qemu-verification.md` for tested config |
+| wants GPU offload | confirm `llamacpp_backend` and `-ngl 99`; see `qemu-verification.md` for tested config |
