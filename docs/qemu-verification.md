@@ -67,6 +67,32 @@ in `~/bootstrap-run.log` *inside* the VM.
 
 ---
 
+## Verify the GMKtec EVO X2 profile specifically
+
+Running `./scripts/qemu-verify.sh` (or `make qemu-verify`) verifies the 
+automation with the default CPU setup. To check the **GMKtec EVO X2** deploy 
+profile before you power the real mini PC on, use:
+
+```bash
+./scripts/qemu-verify-gmktec.sh      # or: make qemu-verify-gmktec
+```
+
+This passes the real hardware profile (`profiles/gmktec-evo-x2.yml`) as Ansible 
+extra vars — the same way `deploy-remote.sh` applies it on real hardware — but 
+adapted for the VM, which has **no GPU** and limited RAM:
+
+- `llamacpp_backend` is forced to `cpu` (QEMU exposes no Vulkan device)
+- `llamacpp_extra_args` (`-ngl 99 --flash-attn`) is emptied (GPU-only flags)
+- context is reduced to 8k and threads to the VM's vCPUs
+- the small Qwen3-8B model is used instead of the 30B GPU model
+
+So this proves the profile YAML parses, the playbook consumes it cleanly, and 
+the hardened systemd service + OpenAI-compatible API come up end to end. 
+Genuine Vulkan/GPU offload and the real 30B model can only be confirmed on the 
+mini PC itself (see `docs/gmktec-evo-x2.md`).
+
+---
+
 ## Option 2 — manual, step by step
 
 Useful if you want to poke around inside the VM yourself.
