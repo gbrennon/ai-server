@@ -55,6 +55,15 @@ The script:
    Qwen3-30B-A3B-Instruct),
 4. waits for `/health` and sends a test chat completion.
 
+Before you power on the mini PC, you can dry-run this exact flow locally:
+
+```bash
+make qemu-verify-gmktec      # runs the EVO X2 profile in a QEMU VM
+```
+
+It can't exercise the GPU (QEMU has none) but proves the profile, playbook,
+service, and API work end to end. See [docs/qemu-verification.md](qemu-verification.md).
+
 First run takes ~15–30 min (compile + 18.6 GB model download). Subsequent
 runs are incremental — edit the profile and re-run the same command.
 
