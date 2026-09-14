@@ -1,39 +1,48 @@
 # ai-server — llama.cpp automation for Fedora Server / Rocky Linux
 
-**GMKtec Evo X2 owner?** See [docs/gmktec-evo-x2.md](docs/gmktec-evo-x2.md) and `scripts/deploy-remote.sh` for one-command remote deployment with GPU (Vulkan) offload.
+Idempotent automation to **build, deploy, and run llama.cpp** (`llama-server`,
+OpenAI-compatible API) on any `dnf`-based distro: Fedora Server, Rocky Linux
+8/9/10, AlmaLinux, RHEL.
 
-Complete, idempotent automation to **build, deploy, and run llama.cpp**
-(`llama-server`, OpenAI-compatible API) on any `dnf`-based distro:
-Fedora Server, Rocky Linux 8/9/10, AlmaLinux, RHEL.
+## Quick start
 
-## Delivery-day runbook
-
-See **[DEPLOYMENT.md](DEPLOYMENT.md)** — step-by-step instructions for deploying to a fresh mini PC (OS install, one-command setup, verification, troubleshooting).
-
-## Quick start (one command)
-
-Clone this repo on the target machine and run:
+Clone the repo on the target machine and run:
 
 ```bash
 sudo ./bootstrap.sh
 ```
 
-That installs Ansible, builds llama.cpp from source (optimized for your CPU),
-downloads a GGUF model, opens the firewall, and starts a hardened systemd
-service. When it finishes:
+That installs Ansible, builds llama.cpp for the CPU, downloads a GGUF model,
+opens the firewall, and starts a hardened systemd service. When it finishes:
 
 ```bash
 curl http://localhost:8080/health
-# Web UI:   http://<server>:8080/
+# Web UI:     http://<server>:8080/
 # OpenAI API: http://<server>:8080/v1/chat/completions
 ```
 
-For a remote server:
+For a remote server (add it to `inventory.ini` first):
 
 ```bash
-# add host to inventory.ini first, then:
 sudo ./bootstrap.sh myserver
 ```
+
+## Documentation
+
+| Topic | Guide |
+|---|---|
+| Delivery-day runbook | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) |
+| GMKtec EVO X2 (GPU/Vulkan) | [docs/gmktec-evo-x2.md](docs/gmktec-evo-x2.md) |
+| QEMU end-to-end verification | [docs/qemu-verification.md](docs/qemu-verification.md) |
+
+Guidance:
+
+- **Verify** the automation in QEMU (`make qemu-verify`); **deploy** the
+  systemd service to real hardware. See
+  [docs/qemu-verification.md](docs/qemu-verification.md).
+- **GMKtec EVO X2 owner?** Deploy with
+  `./scripts/deploy-gmktec.sh <host> [user]` (optional `--setup` for a fresh
+  box). See [docs/gmktec-evo-x2.md](docs/gmktec-evo-x2.md).
 
 ## Configuration
 
@@ -71,19 +80,6 @@ needs ~8 GB RAM/VRAM with 8k context).
 - **CUDA** (NVIDIA): install the driver + CUDA toolkit first, then set
   `llamacpp_backend: cuda`.
 
-## Day-2 operations
-
-```bash
-systemctl status llama-server
-journalctl -u llama-server -f          # or: tail -f /var/log/llama.cpp/llama-server.log
-systemctl restart llama-server
-make models-only                       # re-run just the model download
-```
-
-To change the model or settings: edit `group_vars/all.yml`, then re-run
-`sudo ./bootstrap.sh` (or `make deploy`) — it's fully idempotent; only real
-changes trigger rebuilds/restarts.
-
 ## Layout
 
 ```
@@ -92,9 +88,15 @@ site.yml                  # main playbook
 inventory.ini             # target hosts
 group_vars/all.yml        # ALL configuration
 requirements.yml          # Ansible collections
+profiles/                 # hardware profiles (e.g. gmktec-evo-x2.yml)
 roles/
   common/                 # packages, service user, dirs, swap, firewalld
   build/                  # git clone + cmake build (cpu/vulkan/cuda)
   models/                 # resumable GGUF download
   service/                # hardened systemd unit + health check
+docs/
+  DEPLOYMENT.md           # delivery-day runbook
+  gmktec-evo-x2.md        # GMKtec EVO X2 guide
+  qemu-verification.md    # QEMU end-to-end verification guide
+scripts/                  # bootstrap + deploy/verify wrappers
 ```
