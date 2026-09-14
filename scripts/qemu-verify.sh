@@ -4,7 +4,14 @@
 # inside a QEMU/KVM virtual machine (Fedora Server or Rocky Linux).
 #
 # Usage:
-#   ./scripts/qemu-verify.sh [fedora|rocky]   (default: rocky)
+#   ./scripts/qemu-verify.sh [fedora|rocky]                (default: rocky)
+#   ./scripts/qemu-verify.sh [fedora|rocky] [profile.yml]
+#
+# A hardware profile (e.g. profiles/gmktec-evo-x2.yml via the
+# qemu-verify-gmktec.sh wrapper) is applied as extra vars, adapted for the
+# no-GPU VM: CPU backend, a small model, reduced context. This exercises the
+# profile + playbook + systemd service end to end; actual Vulkan/GPU offload
+# can only be confirmed on the real hardware.
 #
 # What it does:
 #   1. Downloads a cloud qcow2 image (cached after first run)
@@ -17,6 +24,8 @@
 set -euo pipefail
 
 DISTRO="${1:-rocky}"
+PROFILE="${2:-}"
+QEMU_CTX_SIZE=8192
 VM_DIR="${HOME}/.local/share/ai-server-qemu/${DISTRO}"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SSH_PORT=2222
@@ -95,7 +104,17 @@ qemu-system-x86_64 \
   -device virtio-net-pci,netdev=n0 \
   -display none -serial file:serial.log \
   -daemonize -pidfile vm.pid
-trap 'kill "$(cat vm.pid 2>/dev/null)" 2>/dev/null || true' EXIT
+trap cleanup_vm EXIT
+cleanup_vm() {
+  local pid
+  pid="$(cat vm.pid 2>/dev/null || true)"
+  if [[ -n "${pid}" ]]; then
+    kill "${pid}" 2>/dev/null || true
+    sleep 2
+    kill -9 "${pid}" 2>/dev/null || true
+  fi
+  pkill -f 'qemu-system-x86_64.*hostfwd=tcp::2222-:22' 2>/dev/null || true
+}
 
 ssh_cmd() { ssh -p ${SSH_PORT} -i "${SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 "${SSH_USER}@127.0.0.1" "$@"; }
 
@@ -117,9 +136,15 @@ tar --exclude=.git -czf /tmp/ai-server.tgz -C "${REPO_DIR}" .
 scp -P ${SSH_PORT} -i "${SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
   /tmp/ai-server.tgz "${SSH_USER}@127.0.0.1:/tmp/" >/dev/null
 MODEL_NAME=$(basename "${MODEL_SRC}")
-ssh_cmd "mkdir -p ~/ai-server && tar -xzf /tmp/ai-server.tgz -C ~/ai-server \
-  && sed -i 's|^llamacpp_model_file:.*|llamacpp_model_file: ${MODEL_NAME}|' ~/ai-server/group_vars/all.yml \
-  && grep llamacpp_model_file ~/ai-server/group_vars/all.yml"
+ssh_cmd "mkdir -p ~/ai-server && tar -xzf /tmp/ai-server.tgz -C ~/ai-server"
+if [[ -n "${PROFILE}" ]]; then
+  log "profile mode: ${PROFILE} will be applied as extra vars (QEMU-adapted)"
+  ssh_cmd "test -f ~/ai-server/${PROFILE}" \
+    || die "profile not bundled into the VM repo: ${PROFILE}"
+else
+  ssh_cmd "sed -i 's|^llamacpp_model_file:.*|llamacpp_model_file: ${MODEL_NAME}|' ~/ai-server/group_vars/all.yml \
+    && grep llamacpp_model_file ~/ai-server/group_vars/all.yml"
+fi
 
 
 # ---- 6. copy the model into the VM (9p is unavailable on Rocky cloud kernels) ----
@@ -131,9 +156,21 @@ ssh_cmd 'ls -lh /var/lib/llama.cpp/models/'
 
 # ---- 7. run the actual automation --------------------------------------------
 log "running bootstrap.sh INSIDE the VM (this builds llama.cpp — be patient)"
-ssh_cmd 'cd ~/ai-server \
+if [[ -n "${PROFILE}" ]]; then
+  ssh_cmd "cd ~/ai-server \
+    && sudo ./bootstrap.sh localhost '@${PROFILE}' \
+      'llamacpp_backend=cpu' \
+      'llamacpp_extra_args=' \
+      'llamacpp_threads=${VM_CPUS}' \
+      'llamacpp_ctx_size=${QEMU_CTX_SIZE}' \
+      'llamacpp_model_file=${MODEL_NAME}' \
+      2>&1 | tee ~/bootstrap-run.log | tail -n +1 \
+    && sudo grep -E 'PLAY RECAP|failed=[1-9]' ~/ai-server/../bootstrap-run.log || true"
+else
+  ssh_cmd 'cd ~/ai-server \
   && sudo ./bootstrap.sh 2>&1 | tee ~/bootstrap-run.log | tail -n +1 \
   && sudo grep -E "PLAY RECAP|failed=[1-9]" ~/ai-server/../bootstrap-run.log || true'
+fi
 
 # ---- 8. functional verification ----------------------------------------------
 log "verifying /health"
