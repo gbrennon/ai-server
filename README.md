@@ -33,6 +33,7 @@ sudo ./bootstrap.sh myserver
 |---|---|
 | Delivery-day runbook | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) |
 | GMKtec EVO X2 (GPU/Vulkan) | [docs/gmktec-evo-x2.md](docs/gmktec-evo-x2.md) |
+| Rocky PXE network installation | [docs/rocky-network-install.md](docs/rocky-network-install.md) |
 | QEMU end-to-end verification | [docs/qemu-verification.md](docs/qemu-verification.md) |
 
 Guidance:
