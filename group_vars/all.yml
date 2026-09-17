@@ -42,8 +42,12 @@ llamacpp_extra_args: ""
 # llamacpp_extra_args: "-ngl 99 --flash-attn on --mlock"
 
 # --- Model ---
-# Any direct-download GGUF URL (Hugging Face "resolve" links work out of
-# the box). Pick one that fits your hardware!
+# llamacpp_model_url accepts EITHER:
+#   - a full direct GGUF URL (Hugging Face "resolve" links), or
+#   - a Hugging Face repo root URL (e.g. https://huggingface.co/<owner>/<repo>);
+#     the models role then builds <url>/resolve/main/<llamacpp_model_file>.
+# Pick a file that fits your hardware. Point at a GGUF repo, not a base
+# (safetensors) repo, which llama.cpp cannot load.
 llamacpp_model_url: >-
   https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/
   Llama-3.2-3B-Instruct-Q4_K_M.gguf
