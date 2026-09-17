@@ -24,14 +24,39 @@
     enabled: true
 
 - name: Wait for server health endpoint
-  ansible.builtin.uri:
-    url: "http://127.0.0.1:{{ llamacpp_port }}/health"
-    status_code: 200
-    timeout: 5
-  register: health
-  retries: 30
-  delay: 5
-  until: health.status == 200
+  block:
+    - name: Poll /health until llama-server is ready
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ llamacpp_port }}/health"
+        status_code: 200
+        timeout: 5
+      register: health
+      retries: 30
+      delay: 5
+      until: health.status == 200
+  rescue:
+    - name: Capture llama-server status
+      ansible.builtin.command: systemctl status llama-server --no-pager --lines=0
+      changed_when: false
+      failed_when: false
+      register: llama_status
+
+    - name: Capture recent llama-server logs
+      ansible.builtin.command: journalctl -u llama-server -n 80 --no-pager
+      changed_when: false
+      failed_when: false
+      register: llama_logs
+
+    - name: Report why llama-server is not healthy
+      ansible.builtin.fail:
+        msg: |-
+          llama-server did not report healthy on port {{ llamacpp_port }} within the timeout.
+
+          ===== systemctl status llama-server =====
+          {{ llama_status.stdout }}
+
+          ===== journalctl -u llama-server (last 80 lines) =====
+          {{ llama_logs.stdout }}
 
 - name: Deployment successful
   ansible.builtin.debug:
