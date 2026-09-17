@@ -38,11 +38,27 @@
     - not model_file.stat.exists
     - (llamacpp_model_src | default('')) | length > 0
 
+# Accept either a direct .gguf URL or a Hugging Face repo root URL. For a
+# repo root, build the standard resolve link from the (bare) filename:
+#   https://huggingface.co/<owner>/<repo>/resolve/main/<file>.gguf
+# For a file that lives in a repo subfolder (e.g. MTP/<file>.gguf), pass the
+# full direct .gguf URL instead and keep llamacpp_model_file a bare filename.
+- name: Resolve GGUF download URL
+  ansible.builtin.set_fact:
+    llamacpp_model_dl_url: >-
+      {{ llamacpp_model_url
+         if (llamacpp_model_url | regex_search('\.gguf($|\?)'))
+         else (llamacpp_model_url | regex_replace('/+$', '')
+               ~ '/resolve/main/' ~ llamacpp_model_file) }}
+  when:
+    - not model_file.stat.exists
+    - (llamacpp_model_src | default('')) | length == 0
+
 - name: Download GGUF model (resumable)
   ansible.builtin.command: >-
     curl -fL --retry 5 --retry-delay 5 -C -
     -o {{ llamacpp_models_dir }}/{{ llamacpp_model_file }}
-    {{ llamacpp_model_url }}
+    {{ llamacpp_model_dl_url }}
   when:
     - not model_file.stat.exists
     - (llamacpp_model_src | default('')) | length == 0
