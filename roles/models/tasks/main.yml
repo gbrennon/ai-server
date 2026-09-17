@@ -30,8 +30,9 @@
     dest: "{{ llamacpp_models_dir }}/{{ llamacpp_model_file }}"
     # Play runs with become; rsync must land in the root/llama-owned models
     # dir, so escalate the remote side of the transfer via passwordless sudo.
-    rsync_opts:
-      - "--rsync-path=sudo rsync"
+    # Use the dedicated rsync_path param (not rsync_opts) so the module quotes
+    # "sudo rsync" correctly on the remote.
+    rsync_path: "sudo rsync"
   become: false
   when:
     - not model_file.stat.exists
