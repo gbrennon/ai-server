@@ -1,0 +1,8 @@
+---
+# Pin the AMD (integrated) GPU to a fixed DPM performance level at boot.
+# Disabled by default; enable per-host/profile with gpu_performance_mode: true.
+gpu_performance_mode: false
+
+# Value written to power_dpm_force_performance_level: "high" | "auto" | "low".
+# "high" keeps the iGPU at its top clock (best latency for bursty serving).
+gpu_performance_level: high
