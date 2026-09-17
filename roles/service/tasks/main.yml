@@ -23,6 +23,13 @@
     state: started
     enabled: true
 
+# Apply the daemon-reload + restart handlers now, so the health check below
+# tests the freshly installed unit (e.g. a changed model) instead of the
+# previously running configuration. Without this, handlers only fire at the
+# end of the play — after (and only if) the health check succeeds.
+- name: Apply pending service handlers before health check
+  ansible.builtin.meta: flush_handlers
+
 - name: Wait for server health endpoint
   block:
     - name: Poll /health until llama-server is ready
