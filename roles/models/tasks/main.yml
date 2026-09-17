@@ -1,15 +1,50 @@
 ---
-- name: Stat existing model file
+- name: Stat existing model file on target
   ansible.builtin.stat:
     path: "{{ llamacpp_models_dir }}/{{ llamacpp_model_file }}"
   register: model_file
+
+- name: Verify local model source exists (controller)
+  ansible.builtin.stat:
+    path: "{{ llamacpp_model_src }}"
+  delegate_to: localhost
+  become: false
+  register: model_src_stat
+  when:
+    - not model_file.stat.exists
+    - (llamacpp_model_src | default('')) | length > 0
+
+- name: Fail early when local model source is missing
+  ansible.builtin.assert:
+    that: model_src_stat.stat.exists
+    fail_msg: >-
+      llamacpp_model_src is set to '{{ llamacpp_model_src }}' but that file
+      does not exist on the controller.
+  when:
+    - not model_file.stat.exists
+    - (llamacpp_model_src | default('')) | length > 0
+
+- name: Push local model to target (rsync, resumable)
+  ansible.posix.synchronize:
+    src: "{{ llamacpp_model_src }}"
+    dest: "{{ llamacpp_models_dir }}/{{ llamacpp_model_file }}"
+    # Play runs with become; rsync must land in the root/llama-owned models
+    # dir, so escalate the remote side of the transfer via passwordless sudo.
+    rsync_opts:
+      - "--rsync-path=sudo rsync"
+  become: false
+  when:
+    - not model_file.stat.exists
+    - (llamacpp_model_src | default('')) | length > 0
 
 - name: Download GGUF model (resumable)
   ansible.builtin.command: >-
     curl -fL --retry 5 --retry-delay 5 -C -
     -o {{ llamacpp_models_dir }}/{{ llamacpp_model_file }}
     {{ llamacpp_model_url }}
-  when: not model_file.stat.exists
+  when:
+    - not model_file.stat.exists
+    - (llamacpp_model_src | default('')) | length == 0
   changed_when: true
   args:
     creates: "{{ llamacpp_models_dir }}/{{ llamacpp_model_file }}"
@@ -19,7 +54,6 @@
     path: "{{ llamacpp_models_dir }}/{{ llamacpp_model_file }}"
     owner: "{{ llamacpp_user }}"
     group: "{{ llamacpp_group }}"
-  when: model_file.stat.exists
 
 - name: Report model size
   ansible.builtin.command: du -h {{ llamacpp_models_dir }}/{{ llamacpp_model_file }}
