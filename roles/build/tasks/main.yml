@@ -88,3 +88,13 @@
   ansible.builtin.file:
     path: "{{ llamacpp_install_dir }}/build/bin/llama-server"
     mode: "0755"
+
+# Restore SELinux contexts so systemd can exec the binaries/libraries.
+# In-place builds under /opt normally inherit the right label, but a tree
+# copied/moved from a home dir carries home_t and triggers status=203/EXEC
+# (Permission denied) under enforcing SELinux. restorecon makes this robust.
+- name: Restore SELinux context on install dir
+  ansible.builtin.command: restorecon -RF {{ llamacpp_install_dir }}
+  changed_when: false
+  failed_when: false
+  when: ansible_selinux.status | default('disabled') == 'enabled'
