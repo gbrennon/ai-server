@@ -166,7 +166,7 @@ EOF
 
 if (( DRY_RUN )); then log "dry run complete: ${WORK_DIR}"; exit 0; fi
 for command in python3 dnsmasq curl; do command -v "${command}" >/dev/null || die "${command} is required"; done
-curl -fL --retry 3 -o "${WORK_DIR}/tftp/ipxe.efi" https://boot.ipxe.org/ipxe.efi
+curl -fL --retry 3 -o "${WORK_DIR}/tftp/ipxe.efi" https://boot.ipxe.org/x86_64-efi/ipxe.efi
 curl -fL --retry 3 -o "${WORK_DIR}/tftp/undionly.kpxe" https://boot.ipxe.org/undionly.kpxe
 python3 -m http.server "${HTTP_PORT}" --bind "${SERVER_IP}" --directory "${WORK_DIR}/http" >"${WORK_DIR}/logs/http.log" 2>&1 & HTTP_PID=$!
 dnsmasq --no-daemon --conf-file="${WORK_DIR}/dnsmasq.conf" >"${WORK_DIR}/logs/dnsmasq.stdout" 2>&1 & DNSMASQ_PID=$!
