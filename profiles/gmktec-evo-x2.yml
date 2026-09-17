@@ -31,7 +31,5 @@ llamacpp_ctx_size: 32768
 #   GLM-4.5-Air Q4_K_M (~192 GB — does NOT fit; Q3 ~110 GB, tight)
 #   Llama-3.3-70B Q4_K_M (~42 GB):
 #     https://huggingface.co/bartowski/Llama-3.3-70B-Instruct-GGUF/resolve/main/Llama-3.3-70B-Instruct-Q4_K_M.gguf
-llamacpp_model_url: >-
-  https://huggingface.co/unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF/resolve/main/
-  Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf
+llamacpp_model_url: https://huggingface.co/unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF/resolve/main/Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf
 llamacpp_model_file: Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf
