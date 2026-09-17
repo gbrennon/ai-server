@@ -43,5 +43,11 @@ gpu_performance_mode: true
 #   GLM-4.5-Air Q4_K_M (~192 GB — does NOT fit; Q3 ~110 GB, tight)
 #   Llama-3.3-70B Q4_K_M (~42 GB):
 #     https://huggingface.co/bartowski/Llama-3.3-70B-Instruct-GGUF/resolve/main/Llama-3.3-70B-Instruct-Q4_K_M.gguf
-llamacpp_model_url: https://huggingface.co/unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF/resolve/main/Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf
-llamacpp_model_file: Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf
+# llamacpp_model_url: https://huggingface.co/unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF/resolve/main/Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf
+# Ship an already-downloaded model from THIS controller machine instead of
+# downloading from Hugging Face on the target. When llamacpp_model_src is set,
+# the models role rsyncs it to {{ llamacpp_models_dir }}/{{ llamacpp_model_file }}
+# on the target and skips the download. Leave it empty to download from
+# llamacpp_model_url instead.
+llamacpp_model_src: /home/gbrennon/models/unsloth/Qwen3.8-27B-GGUF/main/MTP/mtp-Qwen3.8-27B-Q4_0.gguf
+llamacpp_model_file: mtp-Qwen3.8-27B-Q4_0.gguf
