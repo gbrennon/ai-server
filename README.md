@@ -54,7 +54,7 @@ Everything lives in **`group_vars/all.yml`**:
 |---|---|---|
 | `llamacpp_version` | `master` | llama.cpp release tag (or `master`). Use a recent build — pre-2025-08 builds have broken MoE Vulkan prefill (~15x slower). |
 | `llamacpp_backend` | `cpu` | `cpu`, `vulkan`, or `cuda` |
-| `llamacpp_model_url` | Llama-3.2-3B Q4_K_M | Direct GGUF download URL (HF "resolve" links) |
+| `llamacpp_model_url` | Llama-3.2-3B Q4_K_M | Direct GGUF URL (HF "resolve" link) **or** a GGUF repo root URL (file resolved from `llamacpp_model_file`) |
 | `llamacpp_model_file` | ... | Filename for the model on the target (under `llamacpp_models_dir`) |
 | `llamacpp_model_src` | `""` | Optional absolute path to a GGUF on the controller; when set it is rsynced to the target instead of downloading |
 | `llamacpp_port` | `8080` | HTTP listen port |
