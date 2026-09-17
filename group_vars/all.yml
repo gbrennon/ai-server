@@ -13,8 +13,14 @@ llamacpp_logs_dir: /var/log/llama.cpp
 
 # --- llama.cpp source ---
 # Pin to a release tag, or use 'master' to track HEAD.
+#
+# NOTE: builds older than ~2025-08 have BROKEN MoE prompt-processing on the
+# Vulkan backend (prefill ~= generation speed, ~15x too slow). The old pin
+# 'b5446' (May 2025) exhibited pp512 ~75 t/s on the Strix Halo iGPU; current
+# master reaches ~1250 t/s for the same Qwen3-30B-A3B model. Keep this on a
+# recent build. Validated good commit: 05f2dcf (2026-09-17).
 llamacpp_repo: https://github.com/ggml-org/llama.cpp.git
-llamacpp_version: b5446
+llamacpp_version: master
 
 # --- Hardware backend ---
 # backend: "cpu" | "vulkan" | "cuda"
@@ -32,8 +38,8 @@ llamacpp_port: 8080
 llamacpp_ctx_size: 8192
 llamacpp_threads: "{{ ansible_processor_vcpus }}"
 llamacpp_extra_args: ""
-# Example extra args:
-# llamacpp_extra_args: "-ngl 99 --flash-attn --mlock"
+# Example extra args (note: recent builds require a value for --flash-attn):
+# llamacpp_extra_args: "-ngl 99 --flash-attn on --mlock"
 
 # --- Model ---
 # Any direct-download GGUF URL (Hugging Face "resolve" links work out of
@@ -50,3 +56,11 @@ llamacpp_firewall_zone: public
 # --- Optional: swap size (useful on small-RAM boxes) ---
 manage_swap: false
 swap_file_size_mb: 4096
+
+# --- Optional: pin the (integrated) GPU to its highest DPM state at boot ---
+# On AMD APUs (e.g. Strix Halo) the iGPU idles at ~600 MHz and only ramps
+# under sustained load, adding latency to short requests. Enabling this
+# installs a systemd unit that forces power_dpm_force_performance_level=high.
+# Generic + safe: the unit auto-detects the amdgpu card and no-ops elsewhere.
+gpu_performance_mode: false
+gpu_performance_level: high
