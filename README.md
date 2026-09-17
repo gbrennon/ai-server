@@ -31,19 +31,20 @@ sudo ./bootstrap.sh myserver
 
 | Topic | Guide |
 |---|---|
-| Delivery-day runbook | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) |
-| GMKtec EVO X2 (GPU/Vulkan) | [docs/gmktec-evo-x2.md](docs/gmktec-evo-x2.md) |
-| Rocky PXE network installation | [docs/rocky-network-install.md](docs/rocky-network-install.md) |
-| QEMU end-to-end verification | [docs/qemu-verification.md](docs/qemu-verification.md) |
+| Documentation index | [docs/README.md](docs/README.md) |
+| Deployment overview | [docs/deployment/overview.md](docs/deployment/overview.md) |
+| GMKtec EVO X2 | [docs/hardware/gmktec-evo-x2.md](docs/hardware/gmktec-evo-x2.md) |
+| Model switching | [docs/models/switching.md](docs/models/switching.md) |
+| QEMU verification | [docs/verification/qemu.md](docs/verification/qemu.md) |
 
 Guidance:
 
 - **Verify** the automation in QEMU (`make qemu-verify`); **deploy** the
   systemd service to real hardware. See
-  [docs/qemu-verification.md](docs/qemu-verification.md).
+  [docs/verification/qemu.md](docs/verification/qemu.md).
 - **GMKtec EVO X2 owner?** Deploy with
   `./scripts/deploy-gmktec.sh <host> [user]` (optional `--setup` for a fresh
-  box). See [docs/gmktec-evo-x2.md](docs/gmktec-evo-x2.md).
+  box). See [docs/hardware/gmktec-evo-x2.md](docs/hardware/gmktec-evo-x2.md).
 
 ## Configuration
 
@@ -56,7 +57,7 @@ Everything lives in **`group_vars/all.yml`**:
 | `llamacpp_model_url` | Llama-3.2-3B Q4_K_M | Direct GGUF download URL (HF "resolve" links) |
 | `llamacpp_model_file` | ... | Local filename for the model |
 | `llamacpp_port` | `8080` | HTTP listen port |
-| `llamacpp_ctx_size` | `8192` | Context window |
+| `llamacpp_ctx_size` | `8192` | Context window; `0` loads the selected GGUF's native context |
 | `llamacpp_threads` | all cores | Inference threads |
 | `llamacpp_extra_args` | (empty) | e.g. `-ngl 99 --flash-attn on --mlock` (recent builds need a value for `--flash-attn`) |
 | `llamacpp_open_firewall` | `true` | Open the port in firewalld |
@@ -98,8 +99,12 @@ roles/
   models/                 # resumable GGUF download
   service/                # hardened systemd unit + health check
 docs/
-  DEPLOYMENT.md           # delivery-day runbook
-  gmktec-evo-x2.md        # GMKtec EVO X2 guide
-  qemu-verification.md    # QEMU end-to-end verification guide
+  README.md               # documentation index
+  deployment/             # installation and operations
+  hardware/               # machine and GPU guides
+  models/                 # selection, switching, and context
+  performance/            # tuning
+  verification/           # QEMU and hardware verification
+  installation/           # network installation
 scripts/                  # bootstrap + deploy/verify wrappers
 ```

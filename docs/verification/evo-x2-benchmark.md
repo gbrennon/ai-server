@@ -242,7 +242,7 @@ If you see prefill (`prompt_per_second`) roughly equal to generation
 under load it already boosts to ~2900 MHz at 100% busy while only drawing
 ~45 W of its 120 W budget, so raising TDP / "performance mode" does not help
 throughput (it only reduces idle-to-load ramp latency). See
-[docs/performance-tuning.md](performance-tuning.md).
+[../performance/strix-halo.md](../performance/strix-halo.md).
 
 ## 9. Record a benchmark result
 

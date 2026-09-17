@@ -89,7 +89,7 @@ adapted for the VM, which has **no GPU** and limited RAM:
 So this proves the profile YAML parses, the playbook consumes it cleanly, and 
 the hardened systemd service + OpenAI-compatible API come up end to end. 
 Genuine Vulkan/GPU offload and the real 30B model can only be confirmed on the 
-mini PC itself (see `docs/gmktec-evo-x2.md`).
+mini PC itself (see `docs/hardware/gmktec-evo-x2.md`).
 
 ---
 
