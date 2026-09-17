@@ -1,0 +1,24 @@
+---
+- name: Install GPU performance-mode systemd unit
+  ansible.builtin.template:
+    src: gpu-performance.service.j2
+    dest: /etc/systemd/system/gpu-performance.service
+    mode: "0644"
+  notify: Reload systemd (performance)
+  when: gpu_performance_mode | bool
+
+- name: Enable and start GPU performance-mode unit
+  ansible.builtin.systemd:
+    name: gpu-performance
+    state: started
+    enabled: true
+    daemon_reload: true
+  when: gpu_performance_mode | bool
+
+- name: Disable GPU performance-mode unit when turned off
+  ansible.builtin.systemd:
+    name: gpu-performance
+    state: stopped
+    enabled: false
+  failed_when: false
+  when: not (gpu_performance_mode | bool)

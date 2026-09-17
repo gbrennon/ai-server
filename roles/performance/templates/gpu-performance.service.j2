@@ -1,0 +1,14 @@
+[Unit]
+Description=Pin AMD iGPU DPM to '{{ gpu_performance_level }}' (Strix Halo / RDNA APUs)
+After=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+# Auto-detect the amdgpu card; no-op on non-amdgpu / missing sysfs so the unit
+# is safe to enable on any host. Writes the level to every amdgpu card found.
+ExecStart=/bin/sh -c 'set -e; found=0; for d in /sys/class/drm/card*/device; do [ -e "$d/uevent" ] || continue; grep -q "^DRIVER=amdgpu$" "$d/uevent" || continue; f="$d/power_dpm_force_performance_level"; [ -w "$f" ] || continue; echo {{ gpu_performance_level }} > "$f"; found=1; done; [ "$found" = 1 ] || echo "gpu-performance: no writable amdgpu card found (no-op)"'
+ExecStop=/bin/sh -c 'for d in /sys/class/drm/card*/device; do [ -e "$d/uevent" ] || continue; grep -q "^DRIVER=amdgpu$" "$d/uevent" || continue; f="$d/power_dpm_force_performance_level"; [ -w "$f" ] && echo auto > "$f"; done; true'
+
+[Install]
+WantedBy=multi-user.target
