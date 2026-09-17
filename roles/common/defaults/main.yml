@@ -3,6 +3,7 @@ common_packages:
   - git
   - curl
   - wget
+  - rsync
   - cmake
   - make
   - gcc-c++
