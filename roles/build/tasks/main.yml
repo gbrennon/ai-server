@@ -42,7 +42,7 @@
 
 - name: Compute desired build config
   ansible.builtin.set_fact:
-    desired_build_config: "{{ llamacpp_version }}:{{ llamacpp_backend }}"
+    desired_build_config: "{{ llamacpp_version }}:{{ llamacpp_backend }}:all-cli"
 
 - name: Set rebuild flag when config changed
   ansible.builtin.set_fact:
@@ -54,6 +54,7 @@
     cmake -B build
     -DGGML_NATIVE=ON
     -DLLAMA_BUILD_SERVER=ON
+    -DLLAMA_BUILD_EXAMPLES=ON
     -DGGML_VULKAN={{ 'ON' if llamacpp_backend == 'vulkan' else 'OFF' }}
     -DGGML_CUDA={{ 'ON' if llamacpp_backend == 'cuda' else 'OFF' }}
     -DCMAKE_BUILD_TYPE=Release
@@ -66,8 +67,16 @@
   community.general.make:
     chdir: "{{ llamacpp_install_dir }}/build"
     jobs: "{{ llamacpp_build_jobs }}"
-    target: llama-server
+    target: all
   when: rebuild_required | bool
+
+- name: Install llama.cpp CLI tools in PATH
+  ansible.builtin.shell: >-
+    find {{ llamacpp_install_dir }}/build/bin -maxdepth 1 -type f -perm /111
+    ! -name '*.so' ! -name '*.so.*' -exec ln -sfn {} /usr/local/bin/ \;
+  args:
+    executable: /bin/bash
+  changed_when: false
 
 - name: Stamp build configuration
   ansible.builtin.copy:
