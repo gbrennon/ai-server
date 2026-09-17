@@ -16,6 +16,8 @@ ExecStart={{ llamacpp_install_dir }}/build/bin/llama-server \
   --ctx-size {{ llamacpp_ctx_size }} \
   --threads {{ llamacpp_threads }} \
   {{ llamacpp_extra_args }}
+# NOTE: recent llama.cpp requires a value for --flash-attn (on|off|auto);
+# set it via llamacpp_extra_args (e.g. "-ngl 99 --flash-attn on").
 Restart=on-failure
 RestartSec=10
 
