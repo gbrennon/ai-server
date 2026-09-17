@@ -4,12 +4,21 @@ Choose a GGUF whose weights, KV cache, Vulkan workspace, and service overhead fi
 the target. A model that fits as a file can still fail at startup with a large
 context. See [context windows](context.md) and [model switching](switching.md).
 
-Use a direct Hugging Face `resolve` URL:
+Use a direct Hugging Face `resolve` URL, or a GGUF **repo root** URL (the models
+role appends `/resolve/main/<llamacpp_model_file>`):
 
 ```yaml
+# direct file URL
 llamacpp_model_url: https://huggingface.co/<owner>/<repo>/resolve/main/<file>.gguf
 llamacpp_model_file: <file>.gguf
+
+# or repo root URL (file resolved from llamacpp_model_file)
+llamacpp_model_url: https://huggingface.co/unsloth/Qwen3.8-27B-GGUF
+llamacpp_model_file: Qwen3.8-27B-UD-Q4_K_M.gguf
 ```
+
+Always point at a **GGUF** repo, not a base (safetensors) repo such as
+`Qwen/Qwen3.8-27B`, which llama.cpp cannot load.
 
 Alternatively, if the GGUF is already downloaded on the machine running Ansible,
 set `llamacpp_model_src` to its absolute path to push it to the target instead
