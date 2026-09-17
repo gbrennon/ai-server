@@ -11,6 +11,10 @@ llamacpp_model_url: https://huggingface.co/<owner>/<repo>/resolve/main/<file>.gg
 llamacpp_model_file: <file>.gguf
 ```
 
+Alternatively, if the GGUF is already downloaded on the machine running Ansible,
+set `llamacpp_model_src` to its absolute path to push it to the target instead
+of downloading. See [model switching](switching.md#already-downloaded-models).
+
 ## GMKtec EVO X2 candidates
 
 The EVO X2 has approximately 96 GB of UMA/iGPU memory. MoE models are usually
