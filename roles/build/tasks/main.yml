@@ -97,4 +97,4 @@
   ansible.builtin.command: restorecon -RF {{ llamacpp_install_dir }}
   changed_when: false
   failed_when: false
-  when: ansible_selinux.status | default('disabled') == 'enabled'
+  when: ansible_facts['selinux']['status'] | default('disabled') == 'enabled'
