@@ -39,9 +39,29 @@ omp models llama.cpp
 
 ## Already-downloaded models
 
+There are two ways to skip the download when you already have the GGUF.
+
+### On the target
+
 If the GGUF is already in `/var/lib/llama.cpp/models/`, set
 `llamacpp_model_file` to its exact filename. The download task will skip it.
 Keep `llamacpp_model_url` valid for future deployments.
+
+### On the controller (push a local copy)
+
+If the GGUF only exists on the machine you run Ansible from, set
+`llamacpp_model_src` to its absolute path. The models role rsyncs it to
+`{{ llamacpp_models_dir }}/{{ llamacpp_model_file }}` on the target (resumable,
+via `--rsync-path=sudo rsync`) and skips the download:
+
+```yaml
+llamacpp_model_src: /home/you/models/<file>.gguf   # path on THIS machine
+llamacpp_model_file: <file>.gguf                    # bare filename on the target
+```
+
+Leave `llamacpp_model_src` empty (the default) to download from
+`llamacpp_model_url` instead. The push relies on passwordless sudo on the
+target, which `scripts/deploy-remote.sh` already checks.
 
 ## Multi-part GGUF files
 
