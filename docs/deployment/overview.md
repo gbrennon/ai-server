@@ -9,6 +9,8 @@ This guide covers first installation and deployment. For day-2 operations, see
 - Choose a model in [model selection](../models/selection.md).
 - Set `llamacpp_model_url` and `llamacpp_model_file` in
   [`group_vars/all.yml`](../../group_vars/all.yml), or use a hardware profile.
+  To ship a GGUF you already have on the controller, set `llamacpp_model_src`
+  to its absolute path (rsynced to the target instead of downloaded).
 - For AMD/Intel GPUs, use `llamacpp_backend: vulkan` and `-ngl 99`.
 - Verify changes in QEMU with `make qemu-verify` when practical.
 
@@ -43,11 +45,12 @@ For the known GMKtec host:
 ```
 
 The script checks connectivity and sudo, installs Ansible collections, runs the
-playbook, builds llama.cpp, downloads the selected GGUF, installs the systemd
+playbook, builds llama.cpp, downloads or pushes the selected GGUF, installs the systemd
 service, and verifies `/health` plus a test completion.
 
 ## Idempotency
 
 Re-running the deployment applies changed configuration and restarts services
-when necessary. Model files are downloaded only when the configured filename is
-missing. See [model switching](../models/switching.md) before changing models.
+when necessary. Model files are downloaded (or pushed from the controller when
+`llamacpp_model_src` is set) only when the configured filename is missing on the
+target. See [model switching](../models/switching.md) before changing models.
