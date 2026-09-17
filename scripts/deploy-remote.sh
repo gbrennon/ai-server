@@ -44,11 +44,23 @@ ansible-galaxy collection install -r "${REPO_DIR}/requirements.yml" -f >/dev/nul
 EXTRA_ARGS=( )
 [[ -n "${PROFILE}" ]] && EXTRA_ARGS+=( -e "@${REPO_DIR}/${PROFILE}" )
 
+# site.yml targets the llama_servers group, so build a temporary grouped
+# inventory rather than using Ansible's host-list shorthand.
+INVENTORY_FILE="$(mktemp)"
+cleanup_inventory() { rm -f "${INVENTORY_FILE}"; }
+trap cleanup_inventory EXIT
+cat >"${INVENTORY_FILE}" <<EOF
+[llama_servers]
+target ansible_host=${HOST} ansible_user=${SSH_USER}
+
+[llama_servers:vars]
+ansible_python_interpreter=auto_silent
+EOF
+
 cd "${REPO_DIR}"
 log "running playbook against ${HOST} (this builds llama.cpp — 10–25 min first run)"
 ansible-playbook site.yml \
-  -i "${HOST}," \
-  -u "${SSH_USER}" \
+  -i "${INVENTORY_FILE}" \
   --become \
   "${EXTRA_ARGS[@]}"
 
