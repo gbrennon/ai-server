@@ -51,16 +51,18 @@ Everything lives in **`group_vars/all.yml`**:
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `llamacpp_version` | `b5446` | llama.cpp release tag (or `master`) |
+| `llamacpp_version` | `master` | llama.cpp release tag (or `master`). Use a recent build — pre-2025-08 builds have broken MoE Vulkan prefill (~15x slower). |
 | `llamacpp_backend` | `cpu` | `cpu`, `vulkan`, or `cuda` |
 | `llamacpp_model_url` | Llama-3.2-3B Q4_K_M | Direct GGUF download URL (HF "resolve" links) |
 | `llamacpp_model_file` | ... | Local filename for the model |
 | `llamacpp_port` | `8080` | HTTP listen port |
 | `llamacpp_ctx_size` | `8192` | Context window |
 | `llamacpp_threads` | all cores | Inference threads |
-| `llamacpp_extra_args` | (empty) | e.g. `-ngl 99 --flash-attn --mlock` |
+| `llamacpp_extra_args` | (empty) | e.g. `-ngl 99 --flash-attn on --mlock` (recent builds need a value for `--flash-attn`) |
 | `llamacpp_open_firewall` | `true` | Open the port in firewalld |
 | `manage_swap` | `false` | Create a 4G swap file (helps low-RAM boxes) |
+| `gpu_performance_mode` | `false` | Pin the AMD iGPU to max DPM clock at boot (lower request latency) |
+| `gpu_performance_level` | `high` | DPM level when performance mode is on (`high`/`auto`/`low`) |
 
 ### Picking a model
 

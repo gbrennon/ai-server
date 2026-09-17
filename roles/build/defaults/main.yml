@@ -1,6 +1,11 @@
 ---
-# Vulkan development packages (Fedora + Rocky both ship these)
+# Vulkan development packages (Fedora + Rocky both ship these).
+# spirv-headers-devel + glslang are REQUIRED by newer llama.cpp Vulkan builds
+# (the CMake config does find_package(SPIRV-Headers) and needs a glslang
+# validator); without them configure fails with "Could not find SPIRV-Headers".
 vulkan_packages:
   - vulkan-loader-devel
   - vulkan-headers
   - glslc
+  - spirv-headers-devel
+  - glslang

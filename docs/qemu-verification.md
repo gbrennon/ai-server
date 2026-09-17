@@ -82,7 +82,7 @@ extra vars — the same way `deploy-remote.sh` applies it on real hardware — b
 adapted for the VM, which has **no GPU** and limited RAM:
 
 - `llamacpp_backend` is forced to `cpu` (QEMU exposes no Vulkan device)
-- `llamacpp_extra_args` (`-ngl 99 --flash-attn`) is emptied (GPU-only flags)
+- `llamacpp_extra_args` (`-ngl 99 --flash-attn on`) is emptied (GPU-only flags)
 - context is reduced to 8k and threads to the VM's vCPUs
 - the small Qwen3-8B model is used instead of the 30B GPU model
 

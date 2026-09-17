@@ -12,15 +12,24 @@
 #   runs in system RAM (slow).
 # ============================================================================
 
-# GPU offload via Vulkan
+# GPU offload via Vulkan.
+# NOTE: recent llama.cpp requires a value for --flash-attn (on|off|auto).
+# Optional: add quantized KV cache to halve KV memory at 256K context:
+#   --cache-type-k q8_0 --cache-type-v q8_0
 llamacpp_backend: vulkan
-llamacpp_extra_args: "-ngl 99 --flash-attn"
+llamacpp_extra_args: "-ngl 99 --flash-attn on"
 
 # Ryzen AI Max+ 395: 16 cores
 llamacpp_threads: 16
 
-# Roomy context for the unified memory
-llamacpp_ctx_size: 32768
+# Full native context for Qwen3-30B-A3B-2507 (n_ctx_train = 262144).
+# At fp16 KV this uses ~24 GB VRAM; with a 96 GB UMA carve-out that leaves
+# ~55 GB free after the ~18 GB model. Lower this if you switch to a model
+# with a smaller trained context, or add quantized KV cache (see above).
+llamacpp_ctx_size: 262144
+
+# Pin the iGPU to its highest clock state at boot (lower request latency).
+gpu_performance_mode: true
 
 # Default model: Qwen3-30B-A3B (MoE, ~18.6 GB) — excellent quality/speed
 # balance on the 8060S: only ~3B active params per token.

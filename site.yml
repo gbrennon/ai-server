@@ -7,6 +7,8 @@
   roles:
     - role: common
       tags: [common]
+    - role: performance
+      tags: [performance]
     - role: build
       tags: [build]
     - role: models
