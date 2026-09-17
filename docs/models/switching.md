@@ -8,6 +8,19 @@ llamacpp_model_url: https://huggingface.co/<owner>/<repo>/resolve/main/<file>.gg
 llamacpp_model_file: <file>.gguf
 ```
 
+`llamacpp_model_url` also accepts a **repo root URL**. In that case the models
+role builds `<url>/resolve/main/<llamacpp_model_file>` for you:
+
+```yaml
+llamacpp_model_url: https://huggingface.co/unsloth/Qwen3.8-27B-GGUF
+llamacpp_model_file: Qwen3.8-27B-UD-Q4_K_M.gguf
+```
+
+Use a **GGUF** repo, not a base (safetensors) repo like `Qwen/Qwen3.8-27B`,
+which llama.cpp cannot load. For a file inside a repo subfolder (e.g.
+`MTP/<file>.gguf`), pass the full direct `.gguf` URL and keep
+`llamacpp_model_file` a bare filename.
+
 Change both values, then deploy:
 
 ```bash
