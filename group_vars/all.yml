@@ -30,13 +30,13 @@ llamacpp_version: master
 llamacpp_backend: cpu
 
 # Build parallelism (defaults to number of CPU cores)
-llamacpp_build_jobs: "{{ ansible_processor_vcpus }}"
+llamacpp_build_jobs: "{{ ansible_facts['processor_vcpus'] }}"
 
 # --- Server runtime settings ---
 llamacpp_host: 0.0.0.0
 llamacpp_port: 8080
 llamacpp_ctx_size: 8192
-llamacpp_threads: "{{ ansible_processor_vcpus }}"
+llamacpp_threads: "{{ ansible_facts['processor_vcpus'] }}"
 llamacpp_extra_args: ""
 # Example extra args (note: recent builds require a value for --flash-attn):
 # llamacpp_extra_args: "-ngl 99 --flash-attn on --mlock"
@@ -48,6 +48,11 @@ llamacpp_model_url: >-
   https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/
   Llama-3.2-3B-Instruct-Q4_K_M.gguf
 llamacpp_model_file: Llama-3.2-3B-Instruct-Q4_K_M.gguf
+
+# Optional: absolute path to a GGUF that already exists ON THE CONTROLLER.
+# When set, the models role rsyncs it to the target and skips the download.
+# When empty (default), the model is downloaded from llamacpp_model_url.
+llamacpp_model_src: ""
 
 # --- Firewall ---
 llamacpp_open_firewall: true
