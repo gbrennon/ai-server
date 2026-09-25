@@ -1,60 +1,21 @@
 ---
-# ============================================================================
-# Hardware profile: GMKtec Evo X2
-#   - AMD Ryzen AI Max+ 395 "Strix Halo" (16 Zen5 cores)
-#   - Radeon 8060S iGPU (RDNA 3.5, shares the 128 GB LPDDR5X)
-#
-# Applied by scripts/deploy-remote.sh as extra vars (overrides group_vars).
-#
-# IMPORTANT BIOS SETTINGS (see docs/hardware/gmktec-evo-x2.md):
-#   Set UMA Frame Buffer Size to the maximum (96 GB) so Vulkan sees a large
-#   dedicated VRAM pool. Without it the iGPU only gets ~512 MB and everything
-#   runs in system RAM (slow).
-# ============================================================================
-
-# GPU offload via Vulkan.
-# NOTE: recent llama.cpp requires a value for --flash-attn (on|off|auto).
-# Optional: add quantized KV cache to halve KV memory at 256K context:
-#   --cache-type-k q8_0 --cache-type-v q8_0
-llamacpp_backend: vulkan
-llamacpp_extra_args: "-ngl 99 --flash-attn on"
-
-# Ryzen AI Max+ 395: 16 cores
+llamacpp_backend: rocm
+llamacpp_build_dir: /opt/llama.cpp/build-hip
+llamacpp_hip_architecture: gfx1151
+llamacpp_hip_compiler: /opt/rocm/llvm/bin/clang++
+llamacpp_runtime_library_path: /opt/rocm/lib:/opt/rocm/lib64:/opt/rocm/core-7.14/lib
+llamacpp_extra_args: >-
+  -ngl 99 --device ROCm0 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0
+  --split-mode layer --parallel 1
+  --reasoning off
 llamacpp_threads: 16
-
-# Load the context size from the GGUF metadata. This makes the profile work
-# with models that have different native context windows. llama-server's
-# --ctx-size 0 means "loaded from model".
-#
-# This does not extend a model beyond its trained context. For YaRN/1M
-# experiments, replace 0 with an explicit value and add the model-specific
-# RoPE/YaRN settings to llamacpp_extra_args.
-llamacpp_ctx_size: 0
-
-# Pin the iGPU to its highest clock state at boot (lower request latency).
+llamacpp_ctx_size: 65536
 gpu_performance_mode: true
+llamacpp_model_url: https://huggingface.co/unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF/resolve/main/Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf
+llamacpp_model_file: Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf
+gateway_enabled: true
+client_provider_name: gbrennon-ai-server
+gateway_api_hostname: api.ai-gbrennon.home.arpa
+client_max_tokens: 32768
+client_reasoning: true
 
-# Default model: Qwen3-30B-A3B (MoE, ~18.6 GB) — excellent quality/speed
-# balance on the 8060S: only ~3B active params per token.
-# Alternatives that fit in 128 GB (edit these two lines):
-#   gpt-oss-120b (MXFP4, ~63 GB):
-#     https://huggingface.co/unsloth/gpt-oss-120b-GGUF/resolve/main/gpt-oss-120b-mxfp4-00001-of-00003.gguf
-#     (multi-part! download manually, see docs/models/switching.md)
-#   GLM-4.5-Air Q4_K_M (~192 GB — does NOT fit; Q3 ~110 GB, tight)
-#   Llama-3.3-70B Q4_K_M (~42 GB):
-#     https://huggingface.co/bartowski/Llama-3.3-70B-Instruct-GGUF/resolve/main/Llama-3.3-70B-Instruct-Q4_K_M.gguf
-# llamacpp_model_url: https://huggingface.co/unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF/resolve/main/Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf
-
-# Auto-download on the target. llamacpp_model_url accepts EITHER a Hugging Face
-# repo root (the models role builds the .../resolve/main/<file> link from
-# llamacpp_model_file) OR a full direct .gguf URL. Here we use the GGUF repo
-# root and let the role resolve the file.
-#
-# NOTE: point at the *GGUF* repo (unsloth/Qwen3.8-27B-GGUF), not the base
-# weights repo (Qwen/Qwen3.8-27B), which only ships safetensors llama.cpp
-# cannot load.
-#
-# To push a model you already have on THIS controller instead of downloading,
-# set llamacpp_model_src to its absolute path (see docs/models/switching.md).
-llamacpp_model_url: https://huggingface.co/unsloth/Qwen3.8-27B-GGUF
-llamacpp_model_file: Qwen3.8-27B-UD-Q4_K_M.gguf
