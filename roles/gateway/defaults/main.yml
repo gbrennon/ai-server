@@ -1,0 +1,49 @@
+---
+# Reverse-proxy (Caddy) + local DNS (dnsmasq) gateway in front of llama-server.
+# Disabled by default; enable per-host/profile with gateway_enabled: true.
+gateway_enabled: false
+
+# RFC 8375 safe zone served authoritatively by the local resolver.
+gateway_domain: ai-gbrennon.home.arpa
+gateway_api_hostname: api.ai-gbrennon.home.arpa
+gateway_chat_hostname: web.ai-gbrennon.home.arpa
+
+# Optional human web UI (web.ai-gbrennon.home.arpa). Only rendered when enabled.
+gateway_chat_enabled: false
+gateway_chat_upstream: http://127.0.0.1:3000
+
+# AI host LAN IP: every host under gateway_domain resolves here. Defaults to the
+# host's default IPv4 address; override in group_vars or a profile if needed.
+gateway_lan_ip: "{{ ansible_facts['default_ipv4']['address'] | default('') }}"
+
+# Port llama-server listens on (the reverse_proxy target on 127.0.0.1).
+gateway_llama_port: 8080
+
+# Caddy: pinned official static binary installed as a hardened systemd unit.
+gateway_caddy_version: 2.8.4
+gateway_caddy_install: /opt/caddy/caddy
+gateway_caddy_config_dir: /etc/caddy
+gateway_caddy_data_dir: /var/lib/caddy
+gateway_caddy_log_dir: /var/log/caddy
+gateway_ca_anchor: /etc/pki/ca-trust/source/anchors/caddy-local-ai-root.crt
+gateway_ca_bundle: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+gateway_ca_profile: /etc/profile.d/ai-gateway-ca.sh
+gateway_ca_source: "{{ gateway_caddy_data_dir }}/caddy/pki/authorities/local/root.crt"
+gateway_manage_hosts: true
+gateway_caddy_arch_map:
+  x86_64: amd64
+  aarch64: arm64
+  armv7l: armv7
+  ppc64le: ppc64le
+  s390x: s390x
+
+# Optional dnsmasq upstream(s); comma separated (empty = system resolv.conf).
+gateway_dnsmasq_upstream: ""
+
+# Serve DNS on the LAN IP (not just loopback) so other hosts can use this
+# machine as the resolver for the zone. Off by default (host-local only).
+gateway_dns_lan_listen: false
+
+# Firewall.
+gateway_open_firewall: true
+gateway_firewall_zone: public

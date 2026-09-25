@@ -1,0 +1,29 @@
+{{ gateway_api_hostname }} {
+    reverse_proxy 127.0.0.1:{{ gateway_llama_port }} {
+        flush_interval -1
+    }
+    request_body {
+        max_size 0
+    }
+    tls internal
+}
+
+{{ gateway_chat_hostname }} {
+{% if gateway_chat_enabled | bool %}
+    reverse_proxy {{ gateway_chat_upstream }} {
+        flush_interval -1
+    }
+{% else %}
+    reverse_proxy 127.0.0.1:{{ gateway_llama_port }} {
+        flush_interval -1
+    }
+{% endif %}
+    tls internal
+}
+
+{{ gateway_domain }}, *.{{ gateway_domain }} {
+    reverse_proxy 127.0.0.1:{{ gateway_llama_port }} {
+        flush_interval -1
+    }
+    tls internal
+}

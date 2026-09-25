@@ -28,6 +28,10 @@ llamacpp_version: master
 # - vulkan: good for AMD/Intel GPUs (and NVIDIA without CUDA toolbox bloat)
 # - cuda:   NVIDIA GPUs — requires the CUDA toolkit on the target machine
 llamacpp_backend: cpu
+llamacpp_build_dir: "{{ llamacpp_install_dir }}/build"
+llamacpp_hip_architecture: gfx1151
+llamacpp_hip_compiler: /opt/rocm/llvm/bin/clang++
+llamacpp_runtime_library_path: ""
 
 # Build parallelism (defaults to number of CPU cores)
 llamacpp_build_jobs: "{{ ansible_facts['processor_vcpus'] }}"
@@ -73,3 +77,22 @@ swap_file_size_mb: 4096
 # Generic + safe: the unit auto-detects the amdgpu card and no-ops elsewhere.
 gpu_performance_mode: false
 gpu_performance_level: high
+
+# ============================================================================
+# Optional reverse-proxy + local DNS gateway (Caddy + dnsmasq).
+# Disabled by default; set gateway_enabled: true in a profile or here.
+# ============================================================================
+gateway_enabled: false
+gateway_domain: ai-gbrennon.home.arpa
+gateway_api_hostname: api.ai-gbrennon.home.arpa
+gateway_chat_hostname: web.ai-gbrennon.home.arpa
+gateway_chat_enabled: false
+gateway_chat_upstream: http://127.0.0.1:3000
+# LAN address that *.ai-gbrennon.home.arpa resolves to (defaults to this host's IP).
+gateway_lan_ip: "{{ ansible_default_ipv4.address | default('') }}"
+gateway_llama_port: 8080
+# Serve DNS on the LAN IP too, so other hosts can use this box as the resolver.
+gateway_dns_lan_listen: false
+gateway_caddy_version: 2.8.4
+gateway_open_firewall: true
+gateway_firewall_zone: public

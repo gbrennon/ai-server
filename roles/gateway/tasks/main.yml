@@ -1,0 +1,202 @@
+---
+- name: Fail early when gateway is enabled but LAN IP is empty
+  ansible.builtin.fail:
+    msg: >-
+      gateway_lan_ip is empty; set it in group_vars/all.yml or a profile
+      (e.g. gateway_lan_ip: 192.168.1.100). It is the address the local DNS
+      records resolve to.
+  when:
+    - gateway_enabled | bool
+    - gateway_lan_ip | length == 0
+
+- name: Install DNS resolver (dnsmasq)
+  ansible.builtin.dnf:
+    name: dnsmasq
+    state: present
+  when: gateway_enabled | bool
+- name: Install CA trust package
+  ansible.builtin.dnf:
+    name: ca-certificates
+    state: present
+  when: gateway_enabled | bool
+- name: Map gateway API hostname locally
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "{{ gateway_api_hostname | regex_escape }}$"
+    line: "{{ gateway_lan_ip }} {{ gateway_api_hostname }}"
+    state: present
+    create: true
+    mode: "0644"
+  when:
+    - gateway_enabled | bool
+    - gateway_manage_hosts | bool
+
+
+
+- name: Map architecture for the official Caddy build
+  ansible.builtin.set_fact:
+    gw_gateway_caddy_arch: "{{ gateway_caddy_arch_map[ansible_facts['architecture']] | default(ansible_facts['architecture']) }}"
+  when: gateway_enabled | bool
+
+- name: Check for an existing Caddy binary
+  ansible.builtin.stat:
+    path: "{{ gateway_caddy_install }}"
+  register: gw_gateway_caddy_stat
+  when: gateway_enabled | bool
+
+- name: Create the Caddy install directory
+  ansible.builtin.file:
+    path: "{{ gateway_caddy_install | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: gateway_enabled | bool
+
+- name: Download and install the official Caddy static binary
+  ansible.builtin.get_url:
+    url: "https://caddyserver.com/api/download?os=linux&arch={{ gw_gateway_caddy_arch }}&version={{ gateway_caddy_version }}"
+    dest: "{{ gateway_caddy_install }}"
+    mode: "0755"
+    validate_certs: true
+  when:
+    - gateway_enabled | bool
+    - not (gw_gateway_caddy_stat.stat.exists | default(false))
+
+- name: Create caddy service group
+  ansible.builtin.group:
+    name: caddy
+    system: true
+  when: gateway_enabled | bool
+
+- name: Create caddy service user
+  ansible.builtin.user:
+    name: caddy
+    group: caddy
+    system: true
+    shell: /sbin/nologin
+    home: "{{ gateway_caddy_data_dir }}"
+    create_home: false
+  when: gateway_enabled | bool
+
+- name: Create caddy directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: caddy
+    group: caddy
+    mode: "0750"
+  loop:
+    - "{{ gateway_caddy_config_dir }}"
+    - "{{ gateway_caddy_data_dir }}"
+    - "{{ gateway_caddy_log_dir }}"
+  when: gateway_enabled | bool
+
+- name: Render Caddy reverse-proxy config
+  ansible.builtin.template:
+    src: Caddyfile.j2
+    dest: "{{ gateway_caddy_config_dir }}/Caddyfile"
+    owner: caddy
+    group: caddy
+    mode: "0640"
+  notify: Restart caddy (gateway)
+  when: gateway_enabled | bool
+
+- name: Render dnsmasq local-zone config
+  ansible.builtin.template:
+    src: dnsmasq-ai.conf.j2
+    dest: /etc/dnsmasq.d/ai-gateway.conf
+    mode: "0644"
+  notify: Restart dnsmasq (gateway)
+  when: gateway_enabled | bool
+
+- name: Install caddy systemd unit
+  ansible.builtin.template:
+    src: caddy.service.j2
+    dest: /etc/systemd/system/caddy.service
+    mode: "0644"
+  notify:
+    - Reload systemd (gateway)
+    - Restart caddy (gateway)
+  when: gateway_enabled | bool
+
+- name: Enable and start caddy
+  ansible.builtin.systemd:
+    name: caddy
+    state: started
+    enabled: true
+    daemon_reload: true
+  when: gateway_enabled | bool
+
+- name: Enable and start dnsmasq
+  ansible.builtin.systemd:
+    name: dnsmasq
+    state: started
+    enabled: true
+  when: gateway_enabled | bool
+
+- name: Apply pending gateway handlers before verification
+  ansible.builtin.meta: flush_handlers
+  when: gateway_enabled | bool
+
+- name: Wait for Caddy local root CA
+  ansible.builtin.stat:
+    path: "{{ gateway_ca_source }}"
+  register: gateway_ca_stat
+  retries: 12
+  delay: 5
+  until:
+    - gateway_ca_stat.stat.exists
+    - gateway_ca_stat.stat.size | int > 0
+  when: gateway_enabled | bool
+
+- name: Install Caddy local root CA
+  ansible.builtin.copy:
+    src: "{{ gateway_ca_source }}"
+    remote_src: true
+    dest: "{{ gateway_ca_anchor }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Update system CA trust
+  when: gateway_enabled | bool
+
+- name: Configure Python TLS trust for interactive sessions
+  ansible.builtin.template:
+    src: ai-gateway-ca.sh.j2
+    dest: "{{ gateway_ca_profile }}"
+    owner: root
+    group: root
+    mode: "0644"
+  when: gateway_enabled | bool
+
+- name: Apply pending CA trust handlers
+  ansible.builtin.meta: flush_handlers
+  when: gateway_enabled | bool
+
+- name: Open gateway ports in the firewall
+  ansible.posix.firewalld:
+    port: "{{ item }}"
+    permanent: true
+    immediate: true
+    state: enabled
+    zone: "{{ gateway_firewall_zone }}"
+  loop:
+    - 53/tcp
+    - 53/udp
+    - 80/tcp
+    - 443/tcp
+  when:
+    - gateway_enabled | bool
+    - gateway_open_firewall | bool
+
+- name: Disable gateway services when turned off
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+  loop:
+    - caddy
+    - dnsmasq
+  failed_when: false
+  when: not (gateway_enabled | bool)

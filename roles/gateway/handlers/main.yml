@@ -1,0 +1,17 @@
+---
+- name: Reload systemd (gateway)
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart caddy (gateway)
+  ansible.builtin.systemd:
+    name: caddy
+    state: restarted
+
+- name: Restart dnsmasq (gateway)
+  ansible.builtin.systemd:
+    name: dnsmasq
+    state: restarted
+- name: Update system CA trust
+  ansible.builtin.command: update-ca-trust extract
+  changed_when: true

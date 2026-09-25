@@ -9,6 +9,8 @@
       tags: [common]
     - role: performance
       tags: [performance]
+    - role: gateway
+      tags: [gateway]
     - role: build
       tags: [build]
     - role: models

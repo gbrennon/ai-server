@@ -1,0 +1,29 @@
+[Unit]
+Description=Gateway ingress: Caddy reverse proxy for llama.cpp
+Documentation=https://caddyserver.com/docs
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=caddy
+Group=caddy
+Environment=XDG_CONFIG_HOME={{ gateway_caddy_config_dir }}
+Environment=XDG_DATA_HOME={{ gateway_caddy_data_dir }}
+ExecStart={{ gateway_caddy_install }} run --environ --config {{ gateway_caddy_config_dir }}/Caddyfile
+ExecReload={{ gateway_caddy_install }} reload --config {{ gateway_caddy_config_dir }}/Caddyfile
+TimeoutStopSec=5s
+LimitNOFILE=1048576
+LimitNPROC=512
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths={{ gateway_caddy_config_dir }} {{ gateway_caddy_data_dir }} {{ gateway_caddy_log_dir }}
+PrivateDevices=true
+Restart=on-abnormal
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

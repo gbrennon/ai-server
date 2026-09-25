@@ -1,0 +1,16 @@
+# Managed by the ai-server gateway role. Re-render with: make gateway-only
+# Authoritative local records for the RFC 8375 zone: every host under the
+# domain resolves to the AI host LAN IP (true wildcard via address=/).
+local=/{{ gateway_domain }}/
+address=/{{ gateway_domain }}/{{ gateway_lan_ip }}
+{% if gateway_dns_lan_listen | bool %}
+bind-dynamic
+listen-address=127.0.0.1,{{ gateway_lan_ip }}
+{% endif %}
+# Everything outside the zone uses the system upstream(s) below.
+resolv-file=/etc/resolv.conf
+{% for u in gateway_dnsmasq_upstream | split(',') %}
+{% if u | trim | length > 0 %}
+server={{ u | trim }}
+{% endif %}
+{% endfor %}
