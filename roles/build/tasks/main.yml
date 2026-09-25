@@ -4,6 +4,11 @@
     name: "{{ vulkan_packages }}"
     state: present
   when: llamacpp_backend == 'vulkan'
+- name: Verify ROCm compiler is available
+  ansible.builtin.command:
+    cmd: "{{ llamacpp_hip_compiler }} --version"
+  changed_when: false
+  when: llamacpp_backend == 'rocm'
 
 - name: Warn if CUDA backend selected
   ansible.builtin.debug:
@@ -36,13 +41,15 @@
 
 - name: Register current build config
   ansible.builtin.slurp:
-    src: "{{ llamacpp_install_dir }}/build/.build-config"
+    src: "{{ llamacpp_build_dir }}/.build-config"
   register: current_build_config
   failed_when: false
 
 - name: Compute desired build config
   ansible.builtin.set_fact:
-    desired_build_config: "{{ llamacpp_version }}:{{ llamacpp_backend }}:all-cli"
+    desired_build_config: >-
+      {{ llamacpp_version }}:{{ llamacpp_backend }}:
+      {{ llamacpp_hip_architecture | default('') }}:all-cli
 
 - name: Set rebuild flag when config changed
   ansible.builtin.set_fact:
@@ -51,12 +58,17 @@
 
 - name: Configure llama.cpp (CMake)
   ansible.builtin.command: >-
-    cmake -B build
-    -DGGML_NATIVE=ON
+    cmake -B {{ llamacpp_build_dir }}
+    -DGGML_NATIVE={{ 'OFF' if llamacpp_backend == 'rocm' else 'ON' }}
     -DLLAMA_BUILD_SERVER=ON
     -DLLAMA_BUILD_EXAMPLES=ON
     -DGGML_VULKAN={{ 'ON' if llamacpp_backend == 'vulkan' else 'OFF' }}
     -DGGML_CUDA={{ 'ON' if llamacpp_backend == 'cuda' else 'OFF' }}
+    -DGGML_HIP={{ 'ON' if llamacpp_backend == 'rocm' else 'OFF' }}
+    {{ ('-DCMAKE_HIP_COMPILER=' ~ llamacpp_hip_compiler)
+       if llamacpp_backend == 'rocm' else '' }}
+    {{ ('-DCMAKE_HIP_ARCHITECTURES=' ~ llamacpp_hip_architecture)
+       if llamacpp_backend == 'rocm' else '' }}
     -DCMAKE_BUILD_TYPE=Release
   args:
     chdir: "{{ llamacpp_install_dir }}"
@@ -65,14 +77,14 @@
 
 - name: Compile llama.cpp
   community.general.make:
-    chdir: "{{ llamacpp_install_dir }}/build"
+    chdir: "{{ llamacpp_build_dir }}"
     jobs: "{{ llamacpp_build_jobs }}"
     target: all
   when: rebuild_required | bool
 
 - name: Install llama.cpp CLI tools in PATH
   ansible.builtin.shell: >-
-    find {{ llamacpp_install_dir }}/build/bin -maxdepth 1 -type f -perm /111
+    find {{ llamacpp_build_dir }}/bin -maxdepth 1 -type f -perm /111
     ! -name '*.so' ! -name '*.so.*' -exec ln -sfn {} /usr/local/bin/ \;
   args:
     executable: /bin/bash
@@ -81,12 +93,12 @@
 - name: Stamp build configuration
   ansible.builtin.copy:
     content: "{{ desired_build_config }}\n"
-    dest: "{{ llamacpp_install_dir }}/build/.build-config"
+    dest: "{{ llamacpp_build_dir }}/.build-config"
     mode: "0644"
 
 - name: Ensure server binary is executable
   ansible.builtin.file:
-    path: "{{ llamacpp_install_dir }}/build/bin/llama-server"
+    path: "{{ llamacpp_build_dir }}/bin/llama-server"
     mode: "0755"
 
 # Restore SELinux contexts so systemd can exec the binaries/libraries.

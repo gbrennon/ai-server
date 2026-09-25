@@ -12,3 +12,8 @@ common_packages:
   - python3
   - firewalld
   - policycoreutils-python-utils
+wifi_packages:
+  - NetworkManager-wifi
+  - iw
+  - wireless-regdb
+  - mt7xxx-firmware

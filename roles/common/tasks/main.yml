@@ -4,6 +4,11 @@
     name: "{{ common_packages }}"
     state: present
 
+- name: Install wireless networking packages
+  ansible.builtin.dnf:
+    name: "{{ wifi_packages }}"
+    state: present
+
 - name: Ensure firewalld is running and enabled
   ansible.builtin.systemd:
     name: firewalld

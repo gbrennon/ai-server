@@ -9,7 +9,10 @@ Type=simple
 User={{ llamacpp_user }}
 Group={{ llamacpp_group }}
 WorkingDirectory={{ llamacpp_install_dir }}
-ExecStart={{ llamacpp_install_dir }}/build/bin/llama-server \
+{% if llamacpp_runtime_library_path | default('') | length > 0 %}
+Environment="LD_LIBRARY_PATH={{ llamacpp_runtime_library_path }}"
+{% endif %}
+ExecStart={{ llamacpp_build_dir }}/bin/llama-server \
   --model {{ llamacpp_models_dir }}/{{ llamacpp_model_file }} \
   --host {{ llamacpp_host }} \
   --port {{ llamacpp_port }} \
@@ -24,7 +27,7 @@ RestartSec=10
 # Hardening
 NoNewPrivileges=true
 ProtectSystem=full
-ProtectHome=true
+ProtectHome=read-only
 PrivateTmp=true
 ReadOnlyPaths={{ llamacpp_install_dir }}
 ReadWritePaths={{ llamacpp_models_dir }} {{ llamacpp_logs_dir }}
