@@ -83,9 +83,10 @@ llamacpp_extra_args: "-ngl 99 --flash-attn on --cache-type-k q8_0 --cache-type-v
    `Permission denied` (`status=203/EXEC`) when systemd tries to exec it.
    Building in place under `/opt` is fine; `restorecon -RF` makes it robust.
 
-## Optional next step: ROCm/hipBLASLt backend
+## ROCm/HIP backend
 
-Vulkan MoE prefill is now healthy (~1250 t/s). A ROCm/HIP build
-(`-DGGML_HIP=ON` + hipBLASLt, ROCm ≥ 6.4 for gfx1151) can push prefill even
-higher, at the cost of a heavier toolchain install. Not currently wired into
-the playbook.
+The playbook supports the ROCm/HIP backend for Strix Halo. Set
+`llamacpp_backend: rocm`, provide the ROCm compiler and `gfx1151` architecture,
+and use the ROCm runtime library path in the service environment. ROCm improves
+prompt processing on the Radeon 8060S; decode throughput remains model- and
+workload-dependent.
