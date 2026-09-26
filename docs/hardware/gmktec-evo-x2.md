@@ -7,7 +7,8 @@ Hardware reference:
 - 128 GB unified LPDDR5X-8000 memory
 - Up to approximately 96 GB available as UMA/iGPU memory
 
-The profile uses Vulkan and full layer offload. See:
+The profile uses ROCm/HIP and explicit `ROCm0` selection with full layer
+offload. See:
 
 - [`profiles/gmktec-evo-x2.yml`](../../profiles/gmktec-evo-x2.yml)
 - [GPU offload verification](gpu-offload.md)
@@ -17,7 +18,7 @@ The profile uses Vulkan and full layer offload. See:
 ## BIOS
 
 Set **UMA Frame Buffer Size** to the maximum, normally 96 GB. This gives the
-iGPU a large memory pool for Vulkan. Without it, inference may fall back to
+iGPU a large memory pool for ROCm. Without it, inference may fall back to
 slower system-RAM behavior.
 
 Ensure the iGPU is enabled and the OS has network and SSH enabled.
@@ -29,17 +30,14 @@ the OS, create a sudo user, and enable SSH.
 
 ## Deploy
 
-From the workstation:
+Use the [canonical deployment procedure](../deployment/overview.md):
 
 ```bash
-./scripts/deploy-remote.sh \
-  192.168.0.2 \
-  gbrennon-local-ai \
-  profiles/gmktec-evo-x2.yml
+make deploy-gmktec HOST=192.168.0.2 USER=gbrennon-local-ai
 ```
 
-The profile configures Vulkan, `-ngl 99`, 16 threads, dynamic native model
-context sizing, and the configured GGUF model.
+The profile configures ROCm/HIP, explicit `ROCm0` selection, `-ngl 99`, 16
+threads, a 262K context, parallel factor 2, and the configured GGUF model.
 
 For the complete installation flow, see
 [deployment overview](../deployment/overview.md). For hardware validation, see
