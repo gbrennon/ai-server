@@ -1,56 +1,97 @@
 # Deployment overview
 
-This guide covers first installation and deployment. For day-2 operations, see
-[operations.md](operations.md). For the GMKtec EVO X2, start with
-[hardware/gmktec-evo-x2.md](../hardware/gmktec-evo-x2.md).
+This guide is the authoritative deployment procedure for the GMKtec EVO X2.
+
+## Canonical deployment
+
+Run deployment from the `ai-server` repository on the workstation:
+
+```bash
+make deploy-gmktec HOST=192.168.0.2 USER=gbrennon-local-ai
+```
+
+This command is the single supported deployment path for the GMKtec. It uses
+`profiles/gmktec-evo-x2.yml`, which defines the ROCm/HIP backend, model, context
+size, GPU offload, parallel factor, gateway, and runtime library path.
+
+Use the setup variant only for a new host that still needs SSH key installation
+and passwordless sudo:
+
+```bash
+make deploy-gmktec-setup HOST=192.168.0.2 USER=gbrennon-local-ai
+```
+
+Do not substitute `deploy-remote.sh` or `deploy-interactive.sh` for normal
+GMKtec deployments. Those scripts are lower-level or generic entry points and
+are not the source of truth for this host.
+
+## Network addresses
+
+Use the target IP only for deployment and SSH:
+
+```text
+SSH:       gbrennon-local-ai@192.168.0.2
+Deployment: 192.168.0.2
+```
+
+Use the internal gateway domain for inference clients:
+
+```text
+API: https://api.ai-gbrennon.home.arpa
+```
+
+The gateway terminates TLS and forwards to llama-server on the target. Do not
+send HTTPS requests to the IP address. The direct backend address is HTTP on
+port `8080` and is for diagnostics only:
+
+```text
+Diagnostic backend: http://192.168.0.2:8080
+```
+
+Use the gateway hostname for Pi, OMP, and other OpenAI-compatible clients.
+Use the direct backend only when diagnosing the gateway or checking local
+llama-server health.
 
 ## Before deployment
 
-- Choose a model in [model selection](../models/selection.md).
-- Set `llamacpp_model_url` and `llamacpp_model_file` in
-  [`group_vars/all.yml`](../../group_vars/all.yml), or use a hardware profile.
-  To ship a GGUF you already have on the controller, set `llamacpp_model_src`
-  to its absolute path (rsynced to the target instead of downloaded).
-- For AMD/Intel GPUs, use `llamacpp_backend: vulkan` and `-ngl 99`.
-- Verify changes in QEMU with `make qemu-verify` when practical.
+- Confirm the target is reachable at `192.168.0.2`.
+- Confirm SSH works as `gbrennon-local-ai`.
+- Confirm the target has a dedicated power source.
+- Confirm the target is not running the `evo-power-guard` daemon when testing
+  the llama-server power behavior.
 
-## Install the OS
-
-Install Fedora Server or Rocky Linux 9/10, create a sudo user, and enable SSH.
-The target needs SSH, sudo, and Python 3; Ansible runs on the workstation.
-
-## Deploy locally
-
-```bash
-sudo dnf install -y git
-git clone <your-repo-url>
-cd ai-server
-sudo ./bootstrap.sh
-```
-
-## Deploy remotely
-
-```bash
-ssh-copy-id <user>@<mini-pc-ip>
-./scripts/deploy-remote.sh <mini-pc-ip> <user> [profile.yml]
-```
-
-For the known GMKtec host:
-
-```bash
-./scripts/deploy-remote.sh \
-  192.168.0.2 \
-  gbrennon-local-ai \
-  profiles/gmktec-evo-x2.yml
-```
-
-The script checks connectivity and sudo, installs Ansible collections, runs the
-playbook, builds llama.cpp, downloads or pushes the selected GGUF, installs the systemd
-service, and verifies `/health` plus a test completion.
+The deployment checks SSH, sudo, Ansible collections, the selected model, the
+llama-server service, and the `/health` endpoint. It also sends a test chat
+completion before returning success.
 
 ## Idempotency
 
-Re-running the deployment applies changed configuration and restarts services
-when necessary. Model files are downloaded (or pushed from the controller when
-`llamacpp_model_src` is set) only when the configured filename is missing on the
-target. See [model switching](../models/switching.md) before changing models.
+Re-running the canonical deployment applies changed configuration and restarts
+services when necessary. Existing model files are reused when their configured
+filename is present on the target.
+
+Successful deployment also registers the profile-owned provider in Pi and OMP.
+To remove that provider from both clients without changing the remote server:
+
+```bash
+make unregister-gmktec-model
+```
+
+Re-running the canonical deployment restores the registration from the profile.
+
+## Gateway verification
+
+The profile enables the Caddy TLS gateway and dnsmasq resolver. Verify the
+client-facing endpoint after deployment:
+
+```bash
+curl -fsS https://api.ai-gbrennon.home.arpa/health
+```
+
+The expected response is:
+
+```json
+{"status":"ok"}
+```
+
+See [gateway.md](gateway.md) for gateway trust installation and diagnostics.
