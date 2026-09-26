@@ -1,0 +1,40 @@
+---
+# GMKtec EVO X2 mini PC profile with --parallel 3 (3-slot configuration)
+# For testing scaling beyond dual-slot parallelism
+
+# Basic settings
+hostname: localhost
+ansible_user: root
+ansible_connection: local
+
+# System configuration
+system_hostname: gmktec-evo-x2
+
+# llama.cpp server settings (Vulkan backend with 3 parallel slots)
+llamacpp_model_url: "https://huggingface.co/Qwen/Qwen3.8-27B-UD-GGUF/resolve/main/Qwen3.8-27B-UD-Q4_K_M.gguf"
+llamacpp_model_name: "Qwen3.8-27B-UD-Q4_K_M.gguf"
+llamacpp_model_id: "/var/lib/llama.cpp/models/Qwen3.8-27B-UD-Q4_K_M.gguf"
+
+# Extended KV cache configuration for 3 slots
+llamacpp_host: "0.0.0.0"
+llamacpp_port: 8080
+llamacpp_threads: 16
+llamacpp_context_size: 0  # Use model default (262K)
+llamacpp_gpu_layers: 99
+llamacpp_cache_type_k: "q8_0"
+llamacpp_cache_type_v: "q8_0"
+llamacpp_split_mode: "layer"
+llamacpp_flash_attn: "on"
+
+# WARNING: 3-slot memory overhead
+# Per-slot KV cache @ 262K (q8_0): ~32 GB
+# Model weights (Q4_K_M): ~17 GB
+# 3 slots: 17 + (3 × 32) = 113 GB (tight fit on 128 GB system)
+# Requires memory monitoring; risk of OOM under sustained load
+llamacpp_extra_args: "--parallel 3 --no-prompt-cache"
+
+# WARNING: Power safety concern
+# 3-slot GPU utilization may exceed OCP threshold (~150W)
+# Recommend: dedicated power outlet, P-MODE monitoring, thermal watch
+llamacpp_service_restart: "on-failure"
+llamacpp_service_restart_max_retries: 5
