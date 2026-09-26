@@ -2,8 +2,8 @@
 # ============================================================================
 # deploy-gmktec.sh — one-command deploy to a GMKtec EVO X2 mini PC.
 #
-# Wraps deploy-remote.sh with the GMKtec EVO X2 GPU profile (Vulkan backend,
-# -ngl 99, Qwen3-30B-A3B) so you never pass the hardware profile by hand.
+# Wraps deploy-remote.sh with the GMKtec EVO X2 ROCm/HIP profile and Qwen3-14B
+# so you never pass the hardware profile by hand.
 # An optional --setup flag handles the one-time host bootstrap (SSH key
 # install + passwordless sudo), turning a fresh mini PC into a live server
 # with a single command.
@@ -66,3 +66,5 @@ fi
 
 log "deploying to ${SSH_USER}@${HOST} with profile ${PROFILE}"
 "${DEPLOY_SCRIPT}" "${HOST}" "${SSH_USER}" "${PROFILE}"
+SYNC_CLIENT_MODEL_SCRIPT="${REPO_DIR}/scripts/sync-client-model.sh"
+"${SYNC_CLIENT_MODEL_SCRIPT}" register "${REPO_DIR}/${PROFILE}"
