@@ -21,13 +21,11 @@ which llama.cpp cannot load. For a file inside a repo subfolder (e.g.
 `MTP/<file>.gguf`), pass the full direct `.gguf` URL and keep
 `llamacpp_model_file` a bare filename.
 
-Change both values, then deploy:
+Change both values, then run the
+[canonical GMKtec deployment](../deployment/overview.md):
 
 ```bash
-./scripts/deploy-remote.sh \
-  192.168.0.2 \
-  gbrennon-local-ai \
-  profiles/gmktec-evo-x2.yml
+make deploy-gmktec HOST=192.168.0.2 USER=gbrennon-local-ai
 ```
 
 The model task downloads the file only when it is missing. Deployment updates
@@ -36,11 +34,21 @@ model remains on disk for rollback.
 
 ## Verify
 
+Use the internal gateway domain for clients:
+
+```text
+https://api.ai-gbrennon.home.arpa
+```
+
+Use the target IP only for direct diagnostics:
+
 ```bash
-curl -s http://192.168.0.2:8080/v1/models | python3 -m json.tool
-curl -s http://192.168.0.2:8080/props | python3 -m json.tool
 ssh gbrennon-local-ai@192.168.0.2 \
-  'journalctl -u llama-server -n 80 --no-pager | grep -E "model|context|offload|Vulkan"'
+  'curl -s http://127.0.0.1:8080/v1/models'
+ssh gbrennon-local-ai@192.168.0.2 \
+  'curl -s http://127.0.0.1:8080/props'
+ssh gbrennon-local-ai@192.168.0.2 \
+  'journalctl -u llama-server -n 80 --no-pager | grep -E "model|context|offload|ROCm"'
 ```
 
 Refresh OMP's model metadata after the server restarts:
