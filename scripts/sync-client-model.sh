@@ -102,10 +102,13 @@ def detect_model(profile: dict[str, Any]) -> dict[str, Any]:
     return {"id": model_id, "context": context, "reasoning": reasoning}
 
 
-def model_record(provider: str, detected: dict[str, Any]) -> dict[str, Any]:
+def model_record(
+    provider: str, profile: dict[str, Any], detected: dict[str, Any]
+) -> dict[str, Any]:
     model = str(detected["id"])
     context = int(detected["context"])
-    max_tokens = min(context, 8192)
+    configured_max_tokens = int(profile.get("client_max_tokens", 8192))
+    max_tokens = min(context, configured_max_tokens)
     return {
         "id": model,
         "name": f"{model} ({provider})",
@@ -122,7 +125,7 @@ def provider_records(
 ) -> tuple[str, dict[str, Any], dict[str, Any]]:
     provider = str(profile["client_provider_name"])
     base_url = f"https://{profile['gateway_api_hostname']}/v1"
-    model = model_record(provider, detected)
+    model = model_record(provider, profile, detected)
     pi_provider = {
         "baseUrl": base_url,
         "api": "openai-completions",
