@@ -1,0 +1,14 @@
+[Unit]
+Description=EVO-X2 Power and Thermal Guard
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/evo-power-guard daemon --target-mode performance
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
