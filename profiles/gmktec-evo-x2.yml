@@ -7,7 +7,8 @@ llamacpp_runtime_library_path: /opt/rocm/lib:/opt/rocm/lib64:/opt/rocm/core-7.14
 llamacpp_extra_args: >-
   -ngl 99 --device ROCm0 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0
   --split-mode layer --parallel 1
-  --reasoning off
+  --reasoning off --temp 0.2 --repeat-penalty 1.1
+  --repeat-last-n 512 --frequency-penalty 0.1 --n-predict 4096
 llamacpp_threads: 16
 llamacpp_ctx_size: 65536
 gpu_performance_mode: true
@@ -16,6 +17,6 @@ llamacpp_model_file: Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf
 gateway_enabled: true
 client_provider_name: gbrennon-ai-server
 gateway_api_hostname: api.ai-gbrennon.home.arpa
-client_max_tokens: 32768
+client_max_tokens: 4096
 client_reasoning: true
 
