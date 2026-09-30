@@ -16,6 +16,7 @@ root = pathlib.Path(sys.argv[1])
 profile = {
     "client_provider_name": "test-ai-server",
     "gateway_api_hostname": "api.test.home.arpa",
+    "client_max_tokens": 4096,
 }
 (root / "profile.yml").write_text(yaml.safe_dump(profile), encoding="utf-8")
 (root / "model.json").write_text(
@@ -94,7 +95,7 @@ assert omp["providers"]["test-ai-server"]["baseUrl"] == "https://api.test.home.a
 assert pi["providers"]["test-ai-server"]["models"][0]["id"] == "Detected-Q4.gguf"
 assert omp["providers"]["test-ai-server"]["models"][0]["id"] == "Detected-Q4.gguf"
 assert pi["providers"]["test-ai-server"]["models"][0]["contextWindow"] == 32768
-assert pi["providers"]["test-ai-server"]["models"][0]["maxTokens"] == 8192
+assert pi["providers"]["test-ai-server"]["models"][0]["maxTokens"] == 4096
 assert pi["providers"]["test-ai-server"]["models"][0]["reasoning"] is True
 assert runtime["modelRoles"]["task"] == "test-ai-server/Detected-Q4.gguf:auto"
 assert runtime["modelRoles"]["plan"] == "unrelated/Plan-Q4.gguf"
