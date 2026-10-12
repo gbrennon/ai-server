@@ -72,6 +72,19 @@ export MODEL_METADATA_DIR="${TEMP_DIR}"
 "${ROOT_DIR}/scripts/sync-client-model.sh" register \
   "${TEMP_DIR}/profile.yml" "${TEMP_DIR}/pi.json" "${TEMP_DIR}/omp.yml" \
   "${TEMP_DIR}/omp-runtime.yml"
+python3 - "${TEMP_DIR}" <<'PY'
+import json
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+model = json.loads((root / "model.json").read_text(encoding="utf-8"))
+model["data"][0]["id"] = "/models/Updated-Q4.gguf"
+(root / "model.json").write_text(json.dumps(model), encoding="utf-8")
+props = json.loads((root / "props.json").read_text(encoding="utf-8"))
+props["model_path"] = "/models/Updated-Q4.gguf"
+(root / "props.json").write_text(json.dumps(props), encoding="utf-8")
+PY
 "${ROOT_DIR}/scripts/sync-client-model.sh" register \
   "${TEMP_DIR}/profile.yml" "${TEMP_DIR}/pi.json" "${TEMP_DIR}/omp.yml" \
   "${TEMP_DIR}/omp-runtime.yml"
@@ -92,15 +105,15 @@ for config in (pi, omp):
     assert len(config["providers"]["test-ai-server"]["models"]) == 1
 assert pi["providers"]["test-ai-server"]["baseUrl"] == "https://api.test.home.arpa/v1"
 assert omp["providers"]["test-ai-server"]["baseUrl"] == "https://api.test.home.arpa/v1"
-assert pi["providers"]["test-ai-server"]["models"][0]["id"] == "Detected-Q4.gguf"
-assert omp["providers"]["test-ai-server"]["models"][0]["id"] == "Detected-Q4.gguf"
+assert pi["providers"]["test-ai-server"]["models"][0]["id"] == "Updated-Q4.gguf"
+assert omp["providers"]["test-ai-server"]["models"][0]["id"] == "Updated-Q4.gguf"
 assert pi["providers"]["test-ai-server"]["models"][0]["contextWindow"] == 32768
 assert pi["providers"]["test-ai-server"]["models"][0]["maxTokens"] == 4096
 assert pi["providers"]["test-ai-server"]["models"][0]["reasoning"] is True
-assert runtime["modelRoles"]["task"] == "test-ai-server/Detected-Q4.gguf:auto"
+assert runtime["modelRoles"]["task"] == "test-ai-server/Updated-Q4.gguf:auto"
 assert runtime["modelRoles"]["plan"] == "unrelated/Plan-Q4.gguf"
 assert runtime["retry"]["fallbackChains"]["test-ai-server/*"] == [
-    "test-ai-server/Detected-Q4.gguf"
+    "test-ai-server/Updated-Q4.gguf"
 ]
 PY
 
