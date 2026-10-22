@@ -15,8 +15,8 @@ gpu_performance_mode: true
 llamacpp_model_url: https://huggingface.co/unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF/resolve/main/Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf
 llamacpp_model_file: Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf
 gateway_enabled: true
-client_provider_name: gbrennon-ai-server
-gateway_api_hostname: api.ai-gbrennon.home.arpa
+client_provider_name: gbrennon-server
+gateway_api_hostname: api.gbrennon.home.arpa
 client_max_tokens: 4096
 client_reasoning: true
 
