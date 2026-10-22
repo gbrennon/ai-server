@@ -15,7 +15,7 @@ import yaml
 root = pathlib.Path(sys.argv[1])
 profile = {
     "client_provider_name": "test-ai-server",
-    "gateway_api_hostname": "api.test.home.arpa",
+    "gateway_api_hostname": "api.test.gbrennon.home.arpa",
     "client_max_tokens": 4096,
 }
 (root / "profile.yml").write_text(yaml.safe_dump(profile), encoding="utf-8")
@@ -90,8 +90,8 @@ runtime = yaml.safe_load((root / "omp-runtime.yml").read_text(encoding="utf-8"))
 for config in (pi, omp):
     assert set(config["providers"]) == {"unrelated", "test-ai-server"}
     assert len(config["providers"]["test-ai-server"]["models"]) == 1
-assert pi["providers"]["test-ai-server"]["baseUrl"] == "https://api.test.home.arpa/v1"
-assert omp["providers"]["test-ai-server"]["baseUrl"] == "https://api.test.home.arpa/v1"
+assert pi["providers"]["test-ai-server"]["baseUrl"] == "https://api.test.gbrennon.home.arpa/v1"
+assert omp["providers"]["test-ai-server"]["baseUrl"] == "https://api.test.gbrennon.home.arpa/v1"
 assert pi["providers"]["test-ai-server"]["models"][0]["id"] == "Detected-Q4.gguf"
 assert omp["providers"]["test-ai-server"]["models"][0]["id"] == "Detected-Q4.gguf"
 assert pi["providers"]["test-ai-server"]["models"][0]["contextWindow"] == 32768
