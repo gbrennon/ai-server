@@ -83,12 +83,12 @@ gpu_performance_level: high
 # Disabled by default; set gateway_enabled: true in a profile or here.
 # ============================================================================
 gateway_enabled: false
-gateway_domain: ai-gbrennon.home.arpa
-gateway_api_hostname: api.ai-gbrennon.home.arpa
-gateway_chat_hostname: web.ai-gbrennon.home.arpa
+gateway_domain: gbrennon.home.arpa
+gateway_api_hostname: api.gbrennon.home.arpa
+gateway_chat_hostname: web.gbrennon.home.arpa
 gateway_chat_enabled: false
 gateway_chat_upstream: http://127.0.0.1:3000
-# LAN address that *.ai-gbrennon.home.arpa resolves to (defaults to this host's IP).
+# LAN address that *.gbrennon.home.arpa resolves to (defaults to this host's IP).
 gateway_lan_ip: "{{ ansible_default_ipv4.address | default('') }}"
 gateway_llama_port: 8080
 # Serve DNS on the LAN IP too, so other hosts can use this box as the resolver.
