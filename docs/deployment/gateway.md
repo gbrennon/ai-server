@@ -6,9 +6,9 @@ the RFC 8375 safe zone instead of raw ports:
 
 | Service | Hostname | What it is |
 |---|---|---|
-| Inference API | `https://api.ai-gbrennon.home.arpa` | Caddy reverse_proxy -> llama-server (SSE, `tls internal`) |
-| Web UI (opt.) | `https://web.ai-gbrennon.home.arpa` | Caddy -> a web UI (Open-WebUI etc.) |
-| DNS | `127.0.0.1:53` | `*.ai-gbrennon.home.arpa` -> the AI host LAN IP |
+| Inference API | `https://api.gbrennon.home.arpa` | Caddy reverse_proxy -> llama-server (SSE, `tls internal`) |
+| Web UI (opt.) | `https://web.gbrennon.home.arpa` | Caddy -> a web UI (Open-WebUI etc.) |
+| DNS | `127.0.0.1:53` | `*.gbrennon.home.arpa` -> the AI host LAN IP |
 
 It is installed natively (not containers) as systemd services: `caddy` and
 `dnsmasq`. It is **disabled by default**; opt in per host or per profile.
@@ -16,13 +16,13 @@ It is installed natively (not containers) as systemd services: `caddy` and
 ## Why
 
 - **Stable URLs for tools**: Cline, Aider, and OpenHands all point at
-  `https://api.ai-gbrennon.home.arpa` regardless of the llama-server port.
+  `https://api.gbrennon.home.arpa` regardless of the llama-server port.
 - **Correct streaming**: `flush_interval -1` disables Caddy's response
   buffering so llama.cpp Server-Sent Events (SSE) tokens reach clients
   immediately instead of stalling in chunks.
 - **Large prompts**: the client request-body limit is disabled (`max_size 0`)
   for big context windows and embedding uploads.
-- **Local TLS without public DNS**: `.home.arpa` never gets public ACME certs,
+- **Local TLS without public DNS**: `gbrennon.home.arpa` never gets public ACME certs,
   so Caddy uses its own internal CA (`tls internal`).
 
 ## Enable
@@ -32,8 +32,8 @@ playbook (or `make gateway-only` after the first full deploy):
 
 ```yaml
 gateway_enabled: true
-gateway_domain: ai-gbrennon.home.arpa
-# gateway_api_hostname: api.ai-gbrennon.home.arpa   # defaults under gateway_domain
+gateway_domain: gbrennon.home.arpa
+# gateway_api_hostname: api.gbrennon.home.arpa   # defaults under gateway_domain
 # gateway_lan_ip: 192.168.1.100            # defaults to this host's LAN IP
 ```
 
@@ -46,12 +46,12 @@ make trust-caddy-ca    # optional: trust Caddy's internal root CA system-wide
 ### Optional web UI
 
 Set `gateway_chat_enabled: true` and `gateway_chat_upstream: http://<web>:<port>`
-to also expose `web.ai-gbrennon.home.arpa` (WebSocket + SSE pass through transparently).
+to also expose `web.gbrennon.home.arpa` (WebSocket + SSE pass through transparently).
 
 ## What the role does
 
 - Installs `dnsmasq` and an authoritative zone config
-  (`address=/<domain>/<ip>` -> a real `*.ai-gbrennon.home.arpa` wildcard).
+  (`address=/<domain>/<ip>` -> a real `*.gbrennon.home.arpa` wildcard).
 - Installs the pinned official Caddy static binary and a hardened systemd unit
   (drops to a `caddy` user, `CAP_NET_BIND_SERVICE`, strict sandboxing).
 - Renders `/etc/caddy/Caddyfile` and `/etc/dnsmasq.d/ai-gateway.conf` from
@@ -63,9 +63,9 @@ Because Caddy runs as a host service, its `reverse_proxy` target is
 
 ## Verify & troubleshoot
 
-- `dig @127.0.0.1 -p 53 api.ai-gbrennon.home.arpa +short` prints the LAN IP.
-- `curl -k https://api.ai-gbrennon.home.arpa/health` returns `{"status":"ok"}`.
-- `curl -k -N https://api.ai-gbrennon.home.arpa/v1/models` returns HTTP 200 over local TLS.
+- `dig @127.0.0.1 -p 53 api.gbrennon.home.arpa +short` prints the LAN IP.
+- `curl -k https://api.gbrennon.home.arpa/health` returns `{"status":"ok"}`.
+- `curl -k -N https://api.gbrennon.home.arpa/v1/models` returns HTTP 200 over local TLS.
 
 | Symptom | Check |
 |---|---|
