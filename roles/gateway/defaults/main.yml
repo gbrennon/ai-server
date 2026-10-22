@@ -4,11 +4,11 @@
 gateway_enabled: false
 
 # RFC 8375 safe zone served authoritatively by the local resolver.
-gateway_domain: ai-gbrennon.home.arpa
-gateway_api_hostname: api.ai-gbrennon.home.arpa
-gateway_chat_hostname: web.ai-gbrennon.home.arpa
+gateway_domain: gbrennon.home.arpa
+gateway_api_hostname: api.gbrennon.home.arpa
+gateway_chat_hostname: web.gbrennon.home.arpa
 
-# Optional human web UI (web.ai-gbrennon.home.arpa). Only rendered when enabled.
+# Optional human web UI (web.gbrennon.home.arpa). Only rendered when enabled.
 gateway_chat_enabled: false
 gateway_chat_upstream: http://127.0.0.1:3000
 

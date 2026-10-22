@@ -14,7 +14,7 @@ This report records measured inference rates for the live GMKtec EVO X2 deployme
 | Parallel slots | `1` |
 | Reasoning | Disabled |
 | Client max output | `8192` tokens |
-| API endpoint | `https://api.ai-gbrennon.home.arpa/v1` |
+| API endpoint | `https://api.gbrennon.home.arpa/v1` |
 
 The model's GGUF metadata reports `n_ctx_train: 262144`. The running
 llama.cpp server reports `n_ctx: 262144` and one active slot. Single-slot mode
@@ -69,8 +69,8 @@ make register-gmktec-model
 Use either client with the registered model:
 
 ```bash
-pi --provider gbrennon-ai-server --model Qwen3.8-27B-UD-Q4_K_M.gguf
-omp --model gbrennon-ai-server/Qwen3.8-27B-UD-Q4_K_M.gguf
+pi --provider gbrennon-server --model Qwen3.8-27B-UD-Q4_K_M.gguf
+omp --model gbrennon-server/Qwen3.8-27B-UD-Q4_K_M.gguf
 ```
 
 The 256K context and 8K output limit are intentional. The context window

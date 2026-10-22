@@ -37,7 +37,7 @@ Deployment: 192.168.0.2
 Use the internal gateway domain for inference clients:
 
 ```text
-API: https://api.ai-gbrennon.home.arpa
+API: https://api.gbrennon.home.arpa
 ```
 
 The gateway terminates TLS and forwards to llama-server on the target. Do not
@@ -85,7 +85,7 @@ The profile enables the Caddy TLS gateway and dnsmasq resolver. Verify the
 client-facing endpoint after deployment:
 
 ```bash
-curl -fsS https://api.ai-gbrennon.home.arpa/health
+curl -fsS https://api.gbrennon.home.arpa/health
 ```
 
 The expected response is:

@@ -37,7 +37,7 @@ model remains on disk for rollback.
 Use the internal gateway domain for clients:
 
 ```text
-https://api.ai-gbrennon.home.arpa
+https://api.gbrennon.home.arpa
 ```
 
 Use the target IP only for direct diagnostics:

@@ -38,7 +38,7 @@ make deploy-gmktec HOST=192.168.0.2 USER=gbrennon-local-ai
 
 The overview defines which address is used for SSH and deployment
 (`192.168.0.2`) and which address is used by inference clients
-(`https://api.ai-gbrennon.home.arpa`).
+(`https://api.gbrennon.home.arpa`).
 
 ## Documentation
 
@@ -79,9 +79,9 @@ Everything lives in **`group_vars/all.yml`**:
 | `gpu_performance_mode` | `false` | Pin the AMD iGPU to max DPM clock at boot (lower request latency) |
 | `gpu_performance_level` | `high` | DPM level when performance mode is on (`high`/`auto`/`low`) |
 | `gateway_enabled` | false | Optional Caddy reverse proxy + dnsmasq resolver in front of llama-server (see [docs/deployment/gateway.md](docs/deployment/gateway.md)) |
-| `gateway_domain` | `ai-gbrennon.home.arpa` | RFC 8375 zone served by the local resolver |
-| `gateway_api_hostname` | `api.ai-gbrennon.home.arpa` | Hostname for the OpenAI-compatible API (SSE streaming, `tls internal`) |
-| `gateway_lan_ip` | host LAN IP | Address `*.ai-gbrennon.home.arpa` resolves to |
+| `gateway_domain` | `gbrennon.home.arpa` | RFC 8375 zone served by the local resolver |
+| `gateway_api_hostname` | `api.gbrennon.home.arpa` | Hostname for the OpenAI-compatible API (SSE streaming, `tls internal`) |
+| `gateway_lan_ip` | host LAN IP | Address `*.gbrennon.home.arpa` resolves to |
 
 ### Picking a model
 
@@ -134,7 +134,7 @@ scripts/                  # bootstrap + deploy/verify wrappers
 ## Gateway (optional): Caddy reverse proxy + local DNS
 
 Front `llama-server` with a TLS ingress and an authoritative local resolver so
-tools use stable hostnames (`https://api.ai-gbrennon.home.arpa`) instead of raw ports:
+tools use stable hostnames (`https://api.gbrennon.home.arpa`) instead of raw ports:
 
 ```bash
 # opt in (group_vars/all.yml or a profile) then enforce the gateway stage
@@ -144,5 +144,5 @@ sudo ./scripts/trust-caddy-ca.sh   # trust Caddy's internal TLS certs
 ```
 
 Streaming is SSE-optimized (`flush_interval -1`), request bodies are
-unlimited, and `*.ai-gbrennon.home.arpa` resolves via dnsmasq. See
+unlimited, and `*.gbrennon.home.arpa` resolves via dnsmasq. See
 [docs/deployment/gateway.md](docs/deployment/gateway.md).

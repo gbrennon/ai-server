@@ -2,9 +2,9 @@
 # ============================================================================
 # verify-gateway.sh — idempotent health check for the Caddy + dnsmasq gateway.
 #
-#   1. DNS:      dig @127.0.0.1 -p 53 api.ai-gbrennon.home.arpa +short == <LAN IP>
-#   2. API:      curl -k https://api.ai-gbrennon.home.arpa/health        -> {"status":"ok"}
-#   3. Streaming: curl -k -N https://api.ai-gbrennon.home.arpa/v1/models -> HTTP 200 / local TLS
+#   1. DNS:      dig @127.0.0.1 -p 53 api.gbrennon.home.arpa +short == <LAN IP>
+#   2. API:      curl -k https://api.gbrennon.home.arpa/health        -> {"status":"ok"}
+#   3. Streaming: curl -k -N https://api.gbrennon.home.arpa/v1/models -> HTTP 200 / local TLS
 #   4. (bonus)   a wildcard hostname resolves to the same LAN IP
 #
 # Usage:  ./scripts/verify-gateway.sh
@@ -24,7 +24,7 @@ read_literal() {
   if [[ -n "$v" && "$v" != *'{{'* ]]; then printf '%s' "$v"; fi
 }
 
-DOMAIN="$(read_literal gateway_domain)";          DOMAIN="${GATEWAY_DOMAIN:-${DOMAIN:-ai-gbrennon.home.arpa}}"
+DOMAIN="$(read_literal gateway_domain)";          DOMAIN="${GATEWAY_DOMAIN:-${DOMAIN:-gbrennon.home.arpa}}"
 API_HOST="$(read_literal gateway_api_hostname)";  API_HOST="${GATEWAY_API_HOSTNAME:-${API_HOST:-api.${DOMAIN}}}"
 LLAMA_PORT="$(read_literal gateway_llama_port)"; LLAMA_PORT="${GATEWAY_LLAMA_PORT:-${LLAMA_PORT:-8080}}"
 
