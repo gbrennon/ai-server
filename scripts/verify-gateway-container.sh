@@ -142,8 +142,8 @@ log "trusting Caddy internal root CA"
 crun ./scripts/trust-caddy-ca.sh
 
 log "validating strict TLS without -k"
-body="$(cexec curl -sS --resolve api.ai-gbrennon.home.arpa:443:127.0.0.1 \
-  https://api.ai-gbrennon.home.arpa/health)"
+body="$(cexec curl -sS --resolve api.gbrennon.home.arpa:443:127.0.0.1 \
+  https://api.gbrennon.home.arpa/health)"
 [[ "$body" == '{"status":"ok"}' ]] || fail "unexpected /health body: $body"
 
 echo "[OK] Gateway container verification completed successfully"
