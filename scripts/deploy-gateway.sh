@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-API_HOSTNAME="api.ai-gbrennon.home.arpa"
+API_HOSTNAME="api.gbrennon.home.arpa"
 SSH_OPTS=(-o BatchMode=yes -o ConnectTimeout=10)
 INVENTORY_FILE=""
 
@@ -48,7 +48,7 @@ EOF
 
 deploy_gateway_role() {
   local inventory="$1" host="$2" lan_ip="$3"
-  log "deploying gateway (Caddy + dnsmasq) to ${host}, resolving *.ai-gbrennon.home.arpa -> ${lan_ip}"
+  log "deploying gateway (Caddy + dnsmasq) to ${host}, resolving *.gbrennon.home.arpa -> ${lan_ip}"
   (cd "${REPO_DIR}" && ansible-playbook site.yml \
     -i "${inventory}" \
     --become \
