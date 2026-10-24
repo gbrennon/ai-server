@@ -34,7 +34,12 @@ For the authoritative GMKtec deployment procedure, use
 
 ```bash
 make deploy-gmktec HOST=192.168.0.2 USER=gbrennon-local-ai
+sudo make configure-workstation-dns
 ```
+
+The workstation DNS command configures NetworkManager to route
+`~gbrennon.home.arpa` through `192.168.0.2` and verifies
+`api.gbrennon.home.arpa` resolution.
 
 The overview defines which address is used for SSH and deployment
 (`192.168.0.2`) and which address is used by inference clients
