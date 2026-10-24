@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help help-all deploy build models service check syntax lint deploy-gmktec deploy-gmktec-setup register-gmktec-model unregister-gmktec-model deploy-interactive deploy-gateway verify-pi-ratatui verify-omp-parallel qemu-verify qemu-verify-gmktec build-only models-only service-only gateway-only verify-gateway verify-gateway-container trust-caddy-ca
+.PHONY: help help-all deploy build models service check syntax lint deploy-gmktec deploy-gmktec-setup register-gmktec-model unregister-gmktec-model configure-workstation-dns deploy-interactive deploy-gateway verify-pi-ratatui verify-omp-parallel qemu-verify qemu-verify-gmktec build-only models-only service-only gateway-only verify-gateway verify-gateway-container trust-caddy-ca
 
 help: ## Show available commands
 	@awk 'BEGIN {FS = ":.*##"; print "Available commands:"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-28s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -29,6 +29,9 @@ register-gmktec-model: ## Detect and register the deployed model in Pi and OMP
 
 unregister-gmktec-model: ## Remove the GMKtec profile provider from Pi and OMP
 	./scripts/sync-client-model.sh unregister profiles/gmktec-evo-x2.yml
+
+configure-workstation-dns: ## Configure workstation DNS for the internal gateway
+	sudo ./scripts/configure-workstation-dns.sh
 
 # Interactive deployment wizard (prompts for IP, username, profile, and password)
 deploy-interactive: ## Interactive deployment wizard (IP, user, password, auto-deploy)
