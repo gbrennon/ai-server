@@ -6,6 +6,8 @@ resolvectl_bin="${RESOLVECTL_BIN:-resolvectl}"
 dns_server="${WORKSTATION_DNS_SERVER:-192.168.0.2}"
 internal_domain="${WORKSTATION_DNS_DOMAIN:-gbrennon.home.arpa}"
 api_hostname="${WORKSTATION_DNS_API_HOSTNAME:-api.gbrennon.home.arpa}"
+hosts_file="${WORKSTATION_HOSTS_FILE:-/etc/hosts}"
+getent_bin="${GETENT_BIN:-getent}"
 
 fail() {
   printf '%s\n' "$1" >&2
@@ -49,13 +51,20 @@ update_dns() {
   read -r -a search_values <<< "$search_values"
   "$nmcli_bin" connection modify "$connection" \
     ipv4.dns "${dns_values[*]}" \
-    ipv4.dns-search "${search_values[*]}"
+    ipv4.dns-search "${search_values[*]}" \
+    ipv4.dns-priority -50
   "$nmcli_bin" connection up "$connection" >/dev/null
 }
 
 verify_resolution() {
-  "$resolvectl_bin" query "$api_hostname" >/dev/null \
-    || fail "Could not resolve ${api_hostname} through the workstation resolver."
+  if "$resolvectl_bin" query "$api_hostname" >/dev/null 2>&1; then
+    return 0
+  fi
+  if ! grep -Eq "^[[:space:]]*${dns_server}[[:space:]]+${api_hostname}([[:space:]]|$)" "$hosts_file"; then
+    printf '%s %s\n' "$dns_server" "$api_hostname" >> "$hosts_file"
+  fi
+  "$getent_bin" hosts "$api_hostname" >/dev/null \
+    || fail "Could not resolve ${api_hostname} through DNS or /etc/hosts."
 }
 
 require_root
