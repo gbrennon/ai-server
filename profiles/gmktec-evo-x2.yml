@@ -17,6 +17,7 @@ llamacpp_model_file: Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf
 gateway_enabled: true
 gateway_dns_lan_listen: true
 client_provider_name: gbrennon-server
+client_model_id: qwen3-coder
 gateway_api_hostname: api.gbrennon.home.arpa
 client_max_tokens: 4096
 client_reasoning: true
