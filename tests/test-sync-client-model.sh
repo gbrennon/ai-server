@@ -15,6 +15,7 @@ import yaml
 root = pathlib.Path(sys.argv[1])
 profile = {
     "client_provider_name": "test-ai-server",
+    "client_model_id": "test-model",
     "gateway_api_hostname": "api.test.gbrennon.home.arpa",
     "client_max_tokens": 4096,
 }
@@ -92,15 +93,15 @@ for config in (pi, omp):
     assert len(config["providers"]["test-ai-server"]["models"]) == 1
 assert pi["providers"]["test-ai-server"]["baseUrl"] == "https://api.test.gbrennon.home.arpa/v1"
 assert omp["providers"]["test-ai-server"]["baseUrl"] == "https://api.test.gbrennon.home.arpa/v1"
-assert pi["providers"]["test-ai-server"]["models"][0]["id"] == "Detected-Q4.gguf"
-assert omp["providers"]["test-ai-server"]["models"][0]["id"] == "Detected-Q4.gguf"
+assert pi["providers"]["test-ai-server"]["models"][0]["id"] == "test-model"
+assert omp["providers"]["test-ai-server"]["models"][0]["id"] == "test-model"
 assert pi["providers"]["test-ai-server"]["models"][0]["contextWindow"] == 32768
 assert pi["providers"]["test-ai-server"]["models"][0]["maxTokens"] == 4096
 assert pi["providers"]["test-ai-server"]["models"][0]["reasoning"] is True
-assert runtime["modelRoles"]["task"] == "test-ai-server/Detected-Q4.gguf:auto"
+assert runtime["modelRoles"]["task"] == "test-ai-server/test-model:auto"
 assert runtime["modelRoles"]["plan"] == "unrelated/Plan-Q4.gguf"
 assert runtime["retry"]["fallbackChains"]["test-ai-server/*"] == [
-    "test-ai-server/Detected-Q4.gguf"
+    "test-ai-server/test-model"
 ]
 PY
 
