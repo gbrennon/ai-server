@@ -10,7 +10,7 @@ llamacpp_extra_args: >-
   --reasoning off --temp 0.2 --repeat-penalty 1.1
   --repeat-last-n 512 --frequency-penalty 0.1 --n-predict 4096
 llamacpp_threads: 16
-llamacpp_ctx_size: 131072
+llamacpp_ctx_size: 262144
 gpu_performance_mode: true
 llamacpp_model_url: https://huggingface.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF/resolve/main/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf
 llamacpp_model_file: Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf
