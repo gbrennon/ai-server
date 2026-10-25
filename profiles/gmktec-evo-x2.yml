@@ -6,11 +6,11 @@ llamacpp_hip_compiler: /opt/rocm/llvm/bin/clang++
 llamacpp_runtime_library_path: /opt/rocm/lib:/opt/rocm/lib64:/opt/rocm/core-7.14/lib
 llamacpp_extra_args: >-
   -ngl 99 --device ROCm0 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0
-  --split-mode layer --parallel 1
+  --split-mode layer --parallel 4
   --reasoning off --temp 0.2 --repeat-penalty 1.1
   --repeat-last-n 512 --frequency-penalty 0.1 --n-predict 4096
 llamacpp_threads: 16
-llamacpp_ctx_size: 65536
+llamacpp_ctx_size: 131072
 gpu_performance_mode: true
 llamacpp_model_url: https://huggingface.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF/resolve/main/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf
 llamacpp_model_file: Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf
