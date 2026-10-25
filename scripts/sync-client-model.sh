@@ -87,6 +87,11 @@ def detect_model(profile: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(raw_model, str) or not raw_model:
         raise ValueError("model metadata did not contain a model identifier")
     model_id = pathlib.PurePosixPath(raw_model).name
+    configured_model_id = profile.get("client_model_id")
+    if configured_model_id is not None:
+        if not isinstance(configured_model_id, str) or not configured_model_id:
+            raise ValueError("client_model_id must be a non-empty string")
+        model_id = configured_model_id
     generation = props.get("default_generation_settings", {})
     if not isinstance(generation, dict):
         generation = {}
