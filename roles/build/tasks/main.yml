@@ -30,6 +30,12 @@
     version: "{{ llamacpp_version }}"
     depth: 1
     force: true
+- name: Read checked-out llama.cpp source commit
+  ansible.builtin.command:
+    cmd: git -C {{ llamacpp_install_dir }} rev-parse HEAD
+  register: llamacpp_source_commit
+  changed_when: false
+
 
 - name: Fix source tree ownership for service user
   ansible.builtin.file:
@@ -47,9 +53,7 @@
 
 - name: Compute desired build config
   ansible.builtin.set_fact:
-    desired_build_config: >-
-      {{ llamacpp_version }}:{{ llamacpp_backend }}:
-      {{ llamacpp_hip_architecture | default('') }}:all-cli
+    desired_build_config: "{{ llamacpp_source_commit.stdout | trim }}:{{ llamacpp_backend }}:{{ llamacpp_hip_architecture | default('') }}:all-cli"
 
 - name: Set rebuild flag when config changed
   ansible.builtin.set_fact:
